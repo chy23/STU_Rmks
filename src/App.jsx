@@ -57,6 +57,7 @@ function App() {
   const [wordCount, setWordCount] = useState(WORD_COUNTS[1]);
   const [remarks, setRemarks] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -155,6 +156,24 @@ function App() {
       setStudents(mappedStudents);
     };
     reader.readAsBinaryString(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileUpload({ target: { files: e.dataTransfer.files } });
+    }
   };
 
   const generatePrompt = (student) => {
@@ -280,7 +299,13 @@ function App() {
             <div className="card-header">
               <h2>2. 上傳學生名單</h2>
             </div>
-            <div className="upload-area" onClick={() => fileInputRef.current?.click()}>
+            <div 
+              className={`upload-area ${isDragging ? 'drag-active' : ''}`} 
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <Upload size={32} />
               <p>點擊或拖曳 Excel 檔案上傳</p>
               <span>(.xlsx / .csv)，需包含「姓名」與「特質」欄位</span>
