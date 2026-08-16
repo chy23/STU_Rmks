@@ -47,13 +47,26 @@ function App() {
 
   const fileInputRef = useRef(null);
 
+  const translateProgress = (text) => {
+    let t = text;
+    t = t.replace('Fetching param cache', '下載模型參數快取');
+    t = t.replace('MB fetched.', 'MB 已下載。');
+    t = t.replace('completed,', '完成，');
+    t = t.replace('secs elapsed.', '秒經過。');
+    t = t.replace('It can take a while when we first visit this page to populate the cache.', '初次載入需要較長時間下載數 GB 的模型檔案。');
+    t = t.replace('Later refreshes will become faster.', '未來再次開啟網頁將會直接從本機快取讀取，速度會大幅加快。');
+    t = t.replace('Loading model from cache', '從本機快取讀取模型');
+    t = t.replace('Finish loading', '載入完成');
+    return t;
+  };
+
   const handleInitModel = async () => {
     if (engine) return;
     setModelLoading(true);
     try {
       const newEngine = await CreateMLCEngine(selectedModel, {
         initProgressCallback: (progress) => {
-          setLoadProgress(progress.text);
+          setLoadProgress(translateProgress(progress.text));
         }
       });
       setEngine(newEngine);
