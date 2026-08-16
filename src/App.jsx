@@ -6,8 +6,8 @@ import './App.css';
 
 const AVAILABLE_MODELS = [
   "Llama-3.1-8B-Instruct-q4f16_1-MLC",
-  "Qwen2.5-7B-Instruct-q4f16_1-MLC",
-  "gemma-2-2b-it-q4f16_1-MLC"
+  "gemma-2-2b-it-q4f16_1-MLC",
+  "Phi-3.5-mini-instruct-q4f16_1-MLC"
 ];
 
 const STYLES = [
