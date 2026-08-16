@@ -215,9 +215,7 @@ function App() {
   const generateAll = async () => {
     setIsGenerating(true);
     for (const student of students) {
-      if (student.status !== "done") {
-        await generateForStudent(student.id);
-      }
+      await generateForStudent(student.id);
     }
     setIsGenerating(false);
   };
