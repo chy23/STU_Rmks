@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import * as XLSX from 'xlsx';
-import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info, ChevronDown } from 'lucide-react';
+import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info, ChevronDown, StopCircle } from 'lucide-react';
 import './App.css';
 
 const AVAILABLE_MODELS = [
@@ -62,6 +62,15 @@ function App() {
 
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
+  const shouldStopRef = useRef(false);
+
+  const stopGeneration = () => {
+    shouldStopRef.current = true;
+    if (engine && typeof engine.interruptGenerate === 'function') {
+      engine.interruptGenerate();
+    }
+    setIsGenerating(false);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -232,6 +241,10 @@ function App() {
 
       let currentText = "";
       for await (const chunk of asyncChunkGenerator) {
+        if (shouldStopRef.current) {
+          setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "idle" } : s));
+          return;
+        }
         currentText += chunk.choices[0]?.delta?.content || "";
         setStudents(prev => prev.map(s => s.id === studentId ? { ...s, generatedComment: currentText } : s));
       }
@@ -245,7 +258,9 @@ function App() {
 
   const generateAll = async () => {
     setIsGenerating(true);
+    shouldStopRef.current = false;
     for (const student of students) {
+      if (shouldStopRef.current) break;
       await generateForStudent(student.id);
     }
     setIsGenerating(false);
@@ -403,9 +418,15 @@ function App() {
             <div className="card-header flex-between">
               <h2>4. 預覽與生成</h2>
               <div className="actions">
-                <button className="btn primary" onClick={generateAll} disabled={isGenerating || !engine}>
-                  <Play size={16} /> 全部生成
-                </button>
+                {!isGenerating ? (
+                  <button className="btn primary" onClick={generateAll} disabled={!engine}>
+                    <Play size={16} /> 全部生成
+                  </button>
+                ) : (
+                  <button className="btn danger" onClick={stopGeneration}>
+                    <StopCircle size={16} /> 停止生成
+                  </button>
+                )}
                 <button className="btn outline" onClick={exportExcel} disabled={students.every(s => s.status !== 'done')}>
                   <Download size={16} /> 匯出 Excel
                 </button>

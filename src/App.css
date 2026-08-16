@@ -169,6 +169,16 @@ select:focus, input[type="text"]:focus, textarea:focus {
   background-color: var(--success);
 }
 
+.btn.danger {
+  background-color: #EF4444;
+  color: white;
+}
+
+.btn.danger:hover:not(:disabled) {
+  background-color: #DC2626;
+  transform: translateY(-1px);
+}
+
 .btn.outline {
   background-color: transparent;
   border: 1px solid var(--border-color);
