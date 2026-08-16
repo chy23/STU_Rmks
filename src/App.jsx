@@ -37,6 +37,8 @@ function App() {
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0]);
 
   const [students, setStudents] = useState([]);
+  const [originalAoa, setOriginalAoa] = useState(null);
+  const [headerRowIndex, setHeaderRowIndex] = useState(-1);
   
   // Settings
   const [style, setStyle] = useState(STYLES[0]);
@@ -88,21 +90,57 @@ function App() {
       const wb = XLSX.read(bstr, { type: 'binary' });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws);
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
       
-      // Map data to expected format (assuming '姓名' and '特質' or '過往評語' exist)
-      const mappedStudents = data.map((row, idx) => {
-        const name = row['姓名'] || row['Name'] || `學生${idx + 1}`;
-        const traits = row['特質'] || row['過往評語'] || row['評語'] || row['特質與過往評語'] || JSON.stringify(row);
-        return {
-          id: idx,
+      let headerRowIdx = -1;
+      let nameColIdx = -1;
+      let traitsColIdx = -1;
+
+      for (let i = 0; i < Math.min(data.length, 30); i++) {
+        const row = data[i];
+        if (!Array.isArray(row)) continue;
+        
+        const nIdx = row.findIndex(c => typeof c === 'string' && (c.replace(/\s+/g, '') === '姓名' || c.replace(/\s+/g, '') === 'Name'));
+        if (nIdx !== -1) {
+          headerRowIdx = i;
+          nameColIdx = nIdx;
+          traitsColIdx = row.findIndex(c => typeof c === 'string' && (c.includes('特質') || c.includes('評語') || c.includes('日常') || c.includes('表現')));
+          break;
+        }
+      }
+
+      if (headerRowIdx === -1) {
+        alert("找不到「姓名」欄位，請確定上傳的檔案中有包含學生姓名的標題行。");
+        return;
+      }
+
+      const mappedStudents = [];
+      for (let i = headerRowIdx + 1; i < data.length; i++) {
+        const row = data[i];
+        if (!Array.isArray(row) || !row[nameColIdx]) continue;
+
+        const name = String(row[nameColIdx]).trim();
+        if (!name) continue;
+
+        let traits = "";
+        if (traitsColIdx !== -1 && row[traitsColIdx]) {
+          traits = String(row[traitsColIdx]);
+        } else {
+          traits = row.filter((c, idx) => idx !== nameColIdx && typeof c === 'string' && c.length > 2).join(' ');
+        }
+
+        mappedStudents.push({
+          id: i,
           name: name,
-          traits: traits,
-          originalRow: row,
+          traits: traits || "無",
+          originalRowIndex: i,
           generatedComment: "",
-          status: "idle" // idle, generating, done, error
-        };
-      });
+          status: "idle"
+        });
+      }
+
+      setOriginalAoa(data);
+      setHeaderRowIndex(headerRowIdx);
       setStudents(mappedStudents);
     };
     reader.readAsBinaryString(file);
@@ -166,13 +204,22 @@ function App() {
   };
 
   const exportExcel = () => {
-    if (students.length === 0) return;
-    const exportData = students.map(s => ({
-      ...s.originalRow,
-      "AI生成評語": s.generatedComment
-    }));
+    if (students.length === 0 || !originalAoa) return;
     
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    const exportAoa = originalAoa.map(row => Array.isArray(row) ? [...row] : []);
+    
+    const targetHeaderRow = exportAoa[headerRowIndex];
+    targetHeaderRow.push("AI生成評語");
+    const aiCommentColIdx = targetHeaderRow.length - 1;
+
+    students.forEach(s => {
+      while (exportAoa[s.originalRowIndex].length <= aiCommentColIdx) {
+        exportAoa[s.originalRowIndex].push("");
+      }
+      exportAoa[s.originalRowIndex][aiCommentColIdx] = s.generatedComment;
+    });
+    
+    const ws = XLSX.utils.aoa_to_sheet(exportAoa);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "評語結果");
     XLSX.writeFile(wb, "學生評語生成結果.xlsx");
