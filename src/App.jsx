@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import * as XLSX from 'xlsx';
-import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info } from 'lucide-react';
+import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info, ChevronDown } from 'lucide-react';
 import './App.css';
 
 const AVAILABLE_MODELS = [
@@ -58,8 +58,20 @@ function App() {
   const [remarks, setRemarks] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const translateProgress = (text) => {
     let t = text;
@@ -328,9 +340,35 @@ function App() {
             </div>
             <div className="form-group">
               <label>評語風格：</label>
-              <select value={style} onChange={e => setStyle(e.target.value)}>
-                {STYLES.map(s => <option key={s.name} value={s.name} title={s.desc}>{s.name}</option>)}
-              </select>
+              
+              <div className="custom-select-wrapper" ref={dropdownRef}>
+                <div 
+                  className="custom-select-trigger" 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  <span>{style}</span>
+                  <ChevronDown size={16} />
+                </div>
+                
+                {isDropdownOpen && (
+                  <div className="custom-select-menu">
+                    {STYLES.map(s => (
+                      <div 
+                        key={s.name} 
+                        className={`custom-select-option ${style === s.name ? 'selected' : ''}`}
+                        onClick={() => {
+                          setStyle(s.name);
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        <div className="option-title">{s.name}</div>
+                        {s.desc && <div className="option-desc">{s.desc}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {style !== "其他" && STYLES.find(s => s.name === style)?.desc && (
                 <div className="style-description-box">
                   <Info size={16} className="icon" />
