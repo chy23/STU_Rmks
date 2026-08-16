@@ -11,14 +11,25 @@ const AVAILABLE_MODELS = [
 ];
 
 const STYLES = [
-  "文學造詣極佳的文學",
-  "阿德勒心理學家",
-  "科學人的風格",
-  "亞里士多德的風格",
-  "杜威風格",
-  "亞當斯密風格",
-  "愛因斯坦的風格",
-  "其他"
+  { name: "文學大師風格", desc: "以典雅文辭、溫潤意境與修辭隱喻賦予文字生命力；注重品格薰陶與文雅期許，將日常行為轉化為具文學厚度的成長篇章。" },
+  { name: "亞里士多德美德風格", desc: "強調「卓越不是一種行為，而是一種習慣」；以「實踐智慧（Phronesis）」與「中庸之道」為軸，引導孩子在過度與不及之間找到理性平衡。" },
+  { name: "阿德勒心理學風格", desc: "建構平等的水平夥伴關係，強調「社會興趣」、「不完美的勇氣」與「課題分離」；拒絕定型標籤，引導學生透過「自我決定」承擔行為責任。" },
+  { name: "薩提爾教練風格", desc: "穿透表面的防衛行為，探索冰山底層的感受、渴望與自我價值；引導孩子學會自我覺察，建立表裡如一的「一致性溝通」並為自己負責。" },
+  { name: "成長型思維風格", desc: "聚焦於「努力的過程」、「策略的調整」與「尚未（Not Yet）」的概念；將錯誤與挫折視為大腦升級的訊號，強調持續迭代與刻意練習。" },
+  { name: "科學人系統風格", desc: "運用熱力學、多線程、反饋機制等客觀科學模型，將成長盲點解構為「待調校的系統參數」與「雜訊濾除」，理性且不帶批判色彩。" },
+  { name: "愛因斯坦物理探索風格", desc: "以宇宙時空、量子引力、相對坐標與極致的「好奇心與想像力」為底色；引導孩子在靜止坐標系中收斂心神、聚焦能量，探索真理。" },
+  { name: "敏捷教練 / PM風格", desc: "以精準、目標導向的專案管理語言撰寫，強調「優先級排序」、「專注衝刺」與「持續複盤」；建立清晰的自我管理檢核機制。" },
+  { name: "杜威實用主義風格", desc: "「教育即生活，教育即生長，從做中學」；強調在真實生活經驗中持續進行「反思與重組」，培養民主社群中的主動協作意識。" },
+  { name: "亞當斯密經濟學風格", desc: "透過「看不見的手」調控資源分配，探討「自利與利他」的和諧，強調內在資本（專注力、知識）的累積與邊際效益最大化。" },
+  { name: "英雄之旅敘事風格", desc: "將成長轉折包裝為「冒險勇者的修練試煉」；將自律與常規轉化為「鍛造防具」，將專注與知識轉化為「磨礪寶劍」，賦予榮譽感與使命感。" },
+  { name: "自然生態觀察家風格", desc: "以自然界的花木、根系、季節時序與生態和諧為隱喻，溫和接納生命時鐘；強調「向下深扎根系」的底蘊與「迎向陽光舒展」的主動性。" },
+  { name: "老莊道家風格", desc: "順應孩子的天性稟賦，不強求齊一標準；強調「水善利萬物而不爭」的包容，引導孩子在動靜相生中學會「致虛極，守靜篤」，涵養大器。" },
+  { name: "斯多葛哲學風格", desc: "聚焦於「控制二分法」——清楚劃分「自己能掌控的」與「無法掌控的」；鍛造內在堡壘與反脆弱的理性力量。" },
+  { name: "正念覺察風格", desc: "強調「回到當下」與「非評價式的覺察」；引導孩子在呼吸與感知中安頓跳躍的心念，溫柔接納自己的情緒，將注意力重新聚焦。" },
+  { name: "交響樂團風格", desc: "將成長比擬為「交響樂的合奏」；強調個人主旋律的精準、與同儕聲部的諧和共鳴，以及掌握「休止符（靜心聆聽與留白）」的藝術。" },
+  { name: "建築美學風格", desc: "將學習與品格視為「建築結構的營造」；強調「地基」的穩固、「梁柱」的承重，以及「開窗採光（人際視野與包容）」的開闊。" },
+  { name: "設計思考風格", desc: "以「同理心觀察」、「定義核心問題」、「快速嘗試」與「測試修正」為核心；把生活中的挫折，視為一場有趣的「解題與產品優化」歷程。" },
+  { name: "其他", desc: "" }
 ];
 
 const WORD_COUNTS = [
@@ -41,7 +52,7 @@ function App() {
   const [headerRowIndex, setHeaderRowIndex] = useState(-1);
   
   // Settings
-  const [style, setStyle] = useState(STYLES[0]);
+  const [style, setStyle] = useState(STYLES[0].name);
   const [customStyle, setCustomStyle] = useState("");
   const [wordCount, setWordCount] = useState(WORD_COUNTS[1]);
   const [remarks, setRemarks] = useState("");
@@ -147,8 +158,16 @@ function App() {
   };
 
   const generatePrompt = (student) => {
-    const finalStyle = style === "其他" ? customStyle : style;
-    return `你是一位專業且充滿熱忱的教育工作者。請根據學生的特質與過去評語，用【${finalStyle}】的風格寫出一段給學生的期末評語。
+    let finalStyle = style;
+    let styleDesc = "";
+    if (style === "其他") {
+      finalStyle = customStyle;
+    } else {
+      const s = STYLES.find(x => x.name === style);
+      if (s && s.desc) styleDesc = `\n此風格的核心精神為：${s.desc}`;
+    }
+
+    return `你是一位專業且充滿熱忱的教育工作者。請根據學生的特質與過去評語，用【${finalStyle}】的風格寫出一段給學生的期末評語。${styleDesc}
 字數限制為：${wordCount}。
 特別備註：${remarks || "無"}。
 
@@ -287,7 +306,7 @@ function App() {
             <div className="form-group">
               <label>評語風格：</label>
               <select value={style} onChange={e => setStyle(e.target.value)}>
-                {STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+                {STYLES.map(s => <option key={s.name} value={s.name} title={s.desc}>{s.name}</option>)}
               </select>
               {style === "其他" && (
                 <input type="text" placeholder="輸入自訂風格..." value={customStyle} onChange={e => setCustomStyle(e.target.value)} className="mt-2" />
