@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import * as XLSX from 'xlsx';
-import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info } from 'lucide-react';
 import './App.css';
 
 const AVAILABLE_MODELS = [
@@ -308,6 +308,12 @@ function App() {
               <select value={style} onChange={e => setStyle(e.target.value)}>
                 {STYLES.map(s => <option key={s.name} value={s.name} title={s.desc}>{s.name}</option>)}
               </select>
+              {style !== "其他" && STYLES.find(s => s.name === style)?.desc && (
+                <div className="style-description-box">
+                  <Info size={16} className="icon" />
+                  <span>{STYLES.find(s => s.name === style)?.desc}</span>
+                </div>
+              )}
               {style === "其他" && (
                 <input type="text" placeholder="輸入自訂風格..." value={customStyle} onChange={e => setCustomStyle(e.target.value)} className="mt-2" />
               )}

@@ -329,3 +329,30 @@ select:focus, input[type="text"]:focus, textarea:focus {
     align-items: stretch;
   }
 }
+
+/* Style Description Box */
+.style-description-box {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background-color: #F8FAFC;
+  border-left: 4px solid var(--primary);
+  border-radius: 4px 8px 8px 4px;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.5;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  animation: fadeIn 0.3s ease;
+}
+
+.style-description-box .icon {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
