@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import * as XLSX from 'xlsx';
-import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info, ChevronDown, StopCircle } from 'lucide-react';
+import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info, ChevronDown, StopCircle, Copy, Users, FileSpreadsheet } from 'lucide-react';
 import changelogData from './changelog.json';
 import './App.css';
 
@@ -90,6 +90,10 @@ function App() {
   const [modelLoading, setModelLoading] = useState(false);
   const [loadProgress, setLoadProgress] = useState("");
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
+  const [toasts, setToasts] = useState([]);
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const modelDropdownRef = useRef(null);
+  const [loadProgressObj, setLoadProgressObj] = useState(null);
 
   const [students, setStudents] = useState([]);
   const [originalAoa, setOriginalAoa] = useState(null);
@@ -109,6 +113,22 @@ function App() {
   const dropdownRef = useRef(null);
   const shouldStopRef = useRef(false);
 
+  const addToast = (msg, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
+  };
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      addToast("已複製評語！");
+    }).catch(() => {
+      addToast("複製失敗", "error");
+    });
+  };
+
   const stopGeneration = () => {
     shouldStopRef.current = true;
     if (engine && typeof engine.interruptGenerate === 'function') {
@@ -121,6 +141,9 @@ function App() {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target)) {
+        setIsModelDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -146,10 +169,13 @@ function App() {
     try {
       const newEngine = await CreateMLCEngine(selectedModel, {
         initProgressCallback: (progress) => {
+          console.log(progress);
           setLoadProgress(translateProgress(progress.text));
+          setLoadProgressObj(progress);
         }
       });
       setEngine(newEngine);
+      addToast("模型載入完成！");
     } catch (err) {
       console.error(err);
       alert("載入模型失敗，請確認您的硬體是否支援 WebGPU，或更換較小的模型。");
@@ -353,9 +379,28 @@ function App() {
             <h2>1. AI 模型設定</h2>
           </div>
           <div className="model-controls">
-            <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} disabled={engine || modelLoading}>
-              {AVAILABLE_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
+            <div className="custom-select-wrapper" ref={modelDropdownRef} style={{flex: 1}}>
+              <div className="custom-select-trigger" onClick={() => !engine && !modelLoading && setIsModelDropdownOpen(!isModelDropdownOpen)}>
+                <span style={{fontWeight: 500}}>{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name}</span>
+                <ChevronDown size={18} color="var(--text-muted)" />
+              </div>
+              {isModelDropdownOpen && (
+                <div className="custom-select-menu">
+                  {AVAILABLE_MODELS.map(m => (
+                    <div 
+                      key={m.id} 
+                      className={`custom-select-option ${selectedModel === m.id ? 'selected' : ''}`}
+                      onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); }}
+                    >
+                      <div className="option-title">{m.name}</div>
+                      <div className="option-desc" style={{ marginTop: '4px' }}>
+                        {m.hint}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <button 
               className={`btn primary ${engine ? 'success' : ''}`}
               onClick={handleInitModel} 
@@ -364,11 +409,17 @@ function App() {
               {engine ? <><CheckCircle2 size={16}/> 模型已就緒</> : modelLoading ? <><Loader2 className="spin" size={16}/> 載入中...</> : '載入模型'}
             </button>
           </div>
-          <div className="model-hint">
-            <Info size={14} style={{ flexShrink: 0, marginTop: '2px', marginRight: '6px' }} /> 
-            <span>{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.hint}</span>
-          </div>
-          {loadProgress && !engine && <div className="progress-text">{loadProgress}</div>}
+
+          {loadProgress && !engine && (
+            <div className="progress-text">
+              <div style={{ marginBottom: '8px' }}>{loadProgress}</div>
+              {loadProgressObj && loadProgressObj.progress !== undefined && (
+                <div className="progress-bar-container">
+                  <div className="progress-bar-fill" style={{ width: `${Math.round(loadProgressObj.progress * 100)}%` }}></div>
+                </div>
+              )}
+            </div>
+          )}
           <div className="alert info">
             <AlertCircle size={16}/>
             初次載入需下載數GB模型檔至瀏覽器快取，請耐心等候。建議使用具備獨立顯卡或大記憶體之設備。
@@ -384,8 +435,9 @@ function App() {
             <div 
               className={`upload-area ${isDragging ? 'drag-active' : ''}`} 
               onClick={() => fileInputRef.current?.click()}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
               onDrop={handleDrop}
             >
               <Upload size={32} />
@@ -468,26 +520,32 @@ function App() {
         </div>
 
         {/* Data Table Section */}
-        {students.length > 0 && (
-          <section className="card full-width">
-            <div className="card-header flex-between">
-              <h2>4. 預覽與生成</h2>
-              <div className="actions">
-                {!isGenerating ? (
-                  <button className="btn primary" onClick={generateAll} disabled={!engine}>
-                    <Play size={16} /> 全部生成
-                  </button>
-                ) : (
-                  <button className="btn danger" onClick={stopGeneration}>
-                    <StopCircle size={16} /> 停止生成
-                  </button>
-                )}
-                <button className="btn outline" onClick={exportExcel} disabled={students.every(s => s.status !== 'done')}>
-                  <Download size={16} /> 匯出 Excel
+        <section className="card full-width">
+          <div className="card-header flex-between">
+            <h2>4. 預覽與生成</h2>
+            <div className="actions">
+              {!isGenerating ? (
+                <button className="btn primary" onClick={generateAll} disabled={!engine || students.length === 0}>
+                  <Play size={16} /> 全部生成
                 </button>
-              </div>
+              ) : (
+                <button className="btn danger" onClick={stopGeneration}>
+                  <StopCircle size={16} /> 停止生成
+                </button>
+              )}
+              <button className="btn outline" onClick={exportExcel} disabled={students.length === 0 || students.every(s => s.status !== 'done')}>
+                <Download size={16} /> 匯出 Excel
+              </button>
             </div>
-            
+          </div>
+          
+          {students.length === 0 ? (
+            <div className="empty-state">
+              <Users size={48} />
+              <h3>尚未載入學生資料</h3>
+              <p>請先在上方上傳 Excel 檔案</p>
+            </div>
+          ) : (
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
@@ -507,6 +565,11 @@ function App() {
                         <div className={`scroll-cell generated ${student.status}`}>
                           {student.generatedComment || (student.status === 'idle' ? <span className="text-muted">等待生成...</span> : '')}
                         </div>
+                        {student.status === 'done' && (
+                          <button className="copy-btn" onClick={() => handleCopy(student.generatedComment)} title="複製評語">
+                            <Copy size={14} /> 複製
+                          </button>
+                        )}
                       </td>
                       <td>
                         <button 
@@ -522,8 +585,8 @@ function App() {
                 </tbody>
               </table>
             </div>
-          </section>
-        )}
+          )}
+        </section>
       </main>
 
       {/* Update Log Modal */}

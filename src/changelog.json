@@ -1,5 +1,33 @@
 [
   {
+    "version": "v1.0.21",
+    "date": "2026-08-17",
+    "title": "Fix: fetch all git history in CI for complete changelog",
+    "details": "",
+    "hash": "ef693aa"
+  },
+  {
+    "version": "v1.0.20",
+    "date": "2026-08-17",
+    "title": "Fix: correctly order 8B before 9B model",
+    "details": "",
+    "hash": "242c369"
+  },
+  {
+    "version": "v1.0.19",
+    "date": "2026-08-17",
+    "title": "Enhance: add vendor and country tags to models, clarify Llama 3.1",
+    "details": "",
+    "hash": "81f3c37"
+  },
+  {
+    "version": "v1.0.18",
+    "date": "2026-08-17",
+    "title": "Enhance: record all future updates in changelog without limit",
+    "details": "",
+    "hash": "40691f8"
+  },
+  {
     "version": "v1.0.17",
     "date": "2026-08-17",
     "title": "Fix: correct UI layout and JSX syntax for model selector",
