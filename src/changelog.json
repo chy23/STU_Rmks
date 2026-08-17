@@ -1,0 +1,100 @@
+[
+  {
+    "version": "v1.0.14",
+    "date": "2026-08-17",
+    "title": "Feat: Add legendary athletes styles (Kobe, Jordan, Nadal, Ohtani, Curry, Tai, Honnold)",
+    "details": "",
+    "hash": "43c196a"
+  },
+  {
+    "version": "v1.0.13",
+    "date": "2026-08-17",
+    "title": "Feat: Add comprehensive new styles (Philosophers, Scientists, Entrepreneurs)",
+    "details": "",
+    "hash": "471c917"
+  },
+  {
+    "version": "v1.0.12",
+    "date": "2026-08-16",
+    "title": "Feat: Add stop generation button to interrupt WebLLM inference",
+    "details": "",
+    "hash": "9e6984a"
+  },
+  {
+    "version": "v1.0.11",
+    "date": "2026-08-16",
+    "title": "UI: Replace native select with custom dropdown for better description readability",
+    "details": "",
+    "hash": "ebe5b14"
+  },
+  {
+    "version": "v1.0.10",
+    "date": "2026-08-16",
+    "title": "Feat: Add drag-and-drop file upload functionality",
+    "details": "",
+    "hash": "7e0e746"
+  },
+  {
+    "version": "v1.0.9",
+    "date": "2026-08-16",
+    "title": "Fix: Make generateAll force regenerate all students regardless of status",
+    "details": "",
+    "hash": "c0a4b0e"
+  },
+  {
+    "version": "v1.0.8",
+    "date": "2026-08-16",
+    "title": "UI: Add floating style description box to show style features",
+    "details": "",
+    "hash": "75351e0"
+  },
+  {
+    "version": "v1.0.7",
+    "date": "2026-08-16",
+    "title": "UI: Add comprehensive new comment styles and inject core spirits into prompt",
+    "details": "",
+    "hash": "71208a6"
+  },
+  {
+    "version": "v1.0.6",
+    "date": "2026-08-16",
+    "title": "UI: Remove Qwen model and add Phi-3.5 as lightweight alternative",
+    "details": "",
+    "hash": "6dc9837"
+  },
+  {
+    "version": "v1.0.5",
+    "date": "2026-08-16",
+    "title": "Fix: Handle complex Excel headers and maintain original layout on export",
+    "details": "",
+    "hash": "d7ed8f1"
+  },
+  {
+    "version": "v1.0.4",
+    "date": "2026-08-16",
+    "title": "UI: Translate WebLLM loading progress text to Chinese",
+    "details": "",
+    "hash": "88f4321"
+  },
+  {
+    "version": "v1.0.3",
+    "date": "2026-08-16",
+    "title": "Fix: Ignore node_modules and use npm install in CI",
+    "details": "",
+    "hash": "a0da6ac"
+  },
+  {
+    "version": "v1.0.2",
+    "date": "2026-08-16",
+    "title": "Add GitHub Actions workflow for automatic deployment to Pages",
+    "details": "",
+    "hash": "447ea1b"
+  },
+  {
+    "version": "v1.0.1",
+    "date": "2026-08-16",
+    "title": "Initial commit: WebLLM Student Remarks Generator",
+    "details": "",
+    "hash": "df5cb75"
+  }
+]

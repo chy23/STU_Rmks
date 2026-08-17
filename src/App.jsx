@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import * as XLSX from 'xlsx';
 import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info, ChevronDown, StopCircle } from 'lucide-react';
+import changelogData from './changelog.json';
 import './App.css';
 
 const AVAILABLE_MODELS = [
@@ -99,6 +100,7 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLogOpen, setIsLogOpen] = useState(false);
 
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -330,9 +332,15 @@ function App() {
 
   return (
     <div className="app-container">
+      <div className="watermark top-right">網站建立自楊家驊老師</div>
+      <div className="watermark bottom-right">網站建立自楊家驊老師</div>
+
       <header className="app-header">
         <h1>學生評語生成系統 🎓</h1>
         <p>基於 WebLLM 技術，確保您的資料 100% 在本地處理，無隱私外洩風險。</p>
+        <button className="btn outline small mt-2" onClick={() => setIsLogOpen(true)}>
+          <Info size={14} /> 更新紀錄 ({changelogData.length > 0 ? changelogData[0].version : 'v1.0.0'})
+        </button>
       </header>
 
       <main className="app-main">
@@ -510,6 +518,30 @@ function App() {
           </section>
         )}
       </main>
+
+      {/* Update Log Modal */}
+      {isLogOpen && (
+        <div className="modal-overlay" onClick={() => setIsLogOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>系統更新紀錄</h2>
+              <button className="close-btn" onClick={() => setIsLogOpen(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {changelogData.map(log => (
+                <div key={log.hash} className="log-entry">
+                  <div className="log-version-date">
+                    <span className="log-version">{log.version}</span>
+                    <span className="log-date">{log.date}</span>
+                  </div>
+                  <h3 className="log-title">{log.title}</h3>
+                  {log.details && <p className="log-details">{log.details}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

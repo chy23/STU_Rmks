@@ -2,11 +2,15 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  padding-bottom: 80px;
+  min-height: 100vh;
+  position: relative;
 }
 
 .app-header {
   text-align: center;
   margin-bottom: 3rem;
+  margin-top: 30px;
 }
 
 .app-header h1 {
@@ -436,4 +440,106 @@ select:focus, input[type="text"]:focus, textarea:focus {
   color: var(--text-muted);
   line-height: 1.4;
   white-space: pre-wrap;
+}
+
+/* Watermark */
+.watermark {
+  position: absolute;
+  right: 20px;
+  font-size: 18pt;
+  color: #888888;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 1000;
+  user-select: none;
+  font-weight: bold;
+}
+.watermark.top-right {
+  top: 20px;
+}
+.watermark.bottom-right {
+  bottom: 20px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+.modal-content {
+  background: var(--surface-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+.close-btn:hover {
+  color: var(--text-main);
+}
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.log-entry {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--bg-color);
+}
+.log-entry:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.log-version-date {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.log-version {
+  font-weight: 600;
+  color: var(--primary);
+}
+.log-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-main);
+}
+.log-details {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
 }
