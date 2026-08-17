@@ -6,12 +6,12 @@ import changelogData from './changelog.json';
 import './App.css';
 
 const AVAILABLE_MODELS = [
-  { id: "gemma3-1b-it-q4f16_1-MLC", name: "Gemma 3 (1B)", hint: "【限制與建議】硬體需求極低。適合絕大多數手機與文書筆電。速度極快，但邏輯推論與長文生成較弱。" },
-  { id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (1B)", hint: "【限制與建議】硬體需求極低。適合絕大多數手機與文書筆電。反應迅速，適合簡單日常寫作任務。" },
-  { id: "gemma-2-2b-it-q4f16_1-MLC", name: "Gemma 2 (2B)", hint: "【限制與建議】硬體需求低。約需 2GB 記憶體，適合一般筆電。回答品質與細節較 1B 模型提升不少。" },
-  { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (3B)", hint: "【限制與建議】硬體需求中。約需 3-4GB 記憶體。適合較新規格的電腦或高階手機，邏輯能力佳。" },
-  { id: "gemma-2-9b-it-q4f16_1-MLC", name: "Gemma 2 (9B)", hint: "【限制與建議】硬體需求高。需 8GB 以上記憶體與獨立顯卡。若無獨顯可能導致網頁卡頓或崩潰，但文章品質極佳。" },
-  { id: "Llama-3.1-8B-Instruct-q4f16_1-MLC", name: "Llama 3.1 (8B) / Gamma4", hint: "【限制與建議】硬體需求高。需 8GB 以上記憶體與強大獨立顯卡。運算負載重，但能處理最複雜的寫作與邏輯推演。" }
+  { id: "gemma3-1b-it-q4f16_1-MLC", name: "Gemma 3 (1B) (Google, 美國)", hint: "【限制與建議】硬體需求極低。適合絕大多數手機與文書筆電。速度極快，但邏輯推論與長文生成較弱。" },
+  { id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (1B) (Meta, 美國)", hint: "【限制與建議】硬體需求極低。適合絕大多數手機與文書筆電。反應迅速，適合簡單日常寫作任務。" },
+  { id: "gemma-2-2b-it-q4f16_1-MLC", name: "Gemma 2 (2B) (Google, 美國)", hint: "【限制與建議】硬體需求低。約需 2GB 記憶體，適合一般筆電。回答品質與細節較 1B 模型提升不少。" },
+  { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (3B) (Meta, 美國)", hint: "【限制與建議】硬體需求中。約需 3-4GB 記憶體。適合較新規格的電腦或高階手機，邏輯能力佳。" },
+  { id: "gemma-2-9b-it-q4f16_1-MLC", name: "Gemma 2 (9B) (Google, 美國)", hint: "【限制與建議】硬體需求高。需 8GB 以上記憶體與獨立顯卡。若無獨顯可能導致網頁卡頓或崩潰，但文章品質極佳。" },
+  { id: "Llama-3.1-8B-Instruct-q4f16_1-MLC", name: "Llama 3.1 (8B) (Meta, 美國)", hint: "【限制與建議】硬體需求高。需 8GB 以上記憶體與強大獨立顯卡。運算負載重，但能處理最複雜的寫作與邏輯推演。" }
 ];
 
 const STYLES = [
