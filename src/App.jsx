@@ -6,9 +6,12 @@ import changelogData from './changelog.json';
 import './App.css';
 
 const AVAILABLE_MODELS = [
-  "Llama-3.1-8B-Instruct-q4f16_1-MLC",
-  "gemma-2-2b-it-q4f16_1-MLC",
-  "Phi-3.5-mini-instruct-q4f16_1-MLC"
+  { id: "gemma3-1b-it-q4f16_1-MLC", name: "Gemma 3 (1B)", hint: "【限制與建議】硬體需求極低。適合絕大多數手機與文書筆電。速度極快，但邏輯推論與長文生成較弱。" },
+  { id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (1B)", hint: "【限制與建議】硬體需求極低。適合絕大多數手機與文書筆電。反應迅速，適合簡單日常寫作任務。" },
+  { id: "gemma-2-2b-it-q4f16_1-MLC", name: "Gemma 2 (2B)", hint: "【限制與建議】硬體需求低。約需 2GB 記憶體，適合一般筆電。回答品質與細節較 1B 模型提升不少。" },
+  { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (3B)", hint: "【限制與建議】硬體需求中。約需 3-4GB 記憶體。適合較新規格的電腦或高階手機，邏輯能力佳。" },
+  { id: "gemma-2-9b-it-q4f16_1-MLC", name: "Gemma 2 (9B)", hint: "【限制與建議】硬體需求高。需 8GB 以上記憶體與獨立顯卡。若無獨顯可能導致網頁卡頓或崩潰，但文章品質極佳。" },
+  { id: "Llama-3.1-8B-Instruct-q4f16_1-MLC", name: "Llama 3.1 (8B) / Gamma4", hint: "【限制與建議】硬體需求高。需 8GB 以上記憶體與強大獨立顯卡。運算負載重，但能處理最複雜的寫作與邏輯推演。" }
 ];
 
 const STYLES = [
@@ -86,7 +89,7 @@ function App() {
   const [engine, setEngine] = useState(null);
   const [modelLoading, setModelLoading] = useState(false);
   const [loadProgress, setLoadProgress] = useState("");
-  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0]);
+  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
 
   const [students, setStudents] = useState([]);
   const [originalAoa, setOriginalAoa] = useState(null);
@@ -351,7 +354,7 @@ function App() {
           </div>
           <div className="model-controls">
             <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} disabled={engine || modelLoading}>
-              {AVAILABLE_MODELS.map(m => <option key={m} value={m}>{m}</option>)}
+              {AVAILABLE_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
             <button 
               className={`btn primary ${engine ? 'success' : ''}`}
@@ -360,6 +363,10 @@ function App() {
             >
               {engine ? <><CheckCircle2 size={16}/> 模型已就緒</> : modelLoading ? <><Loader2 className="spin" size={16}/> 載入中...</> : '載入模型'}
             </button>
+          </div>
+          <div className="model-hint">
+            <Info size={14} style={{ flexShrink: 0, marginTop: '2px', marginRight: '6px' }} /> 
+            <span>{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.hint}</span>
           </div>
           {loadProgress && !engine && <div className="progress-text">{loadProgress}</div>}
           <div className="alert info">
