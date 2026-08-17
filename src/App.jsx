@@ -435,9 +435,9 @@ function App() {
             <div 
               className={`upload-area ${isDragging ? 'drag-active' : ''}`} 
               onClick={() => fileInputRef.current?.click()}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
+              onDragEnter={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
               <Upload size={32} />
