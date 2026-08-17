@@ -3,6 +3,14 @@ const fs = require('fs');
 const path = require('path');
 
 const translationMap = {
+  "Fix: resolve blank screen by fixing undefined handleDrag reference": {
+    title: "修正網頁白屏問題",
+    details: "修復拖曳上傳區的程式碼參照錯誤，解決畫面載入時出現一片空白的問題。"
+  },
+  "Fix: restore missing favicon and translate changelog to Traditional Chinese": {
+    title: "修復網站圖示與更新紀錄中文化",
+    details: "1. 將不小心遺失的網站圖示 (Favicon) 補回大標題旁。\n2. 將系統更新紀錄全面改為繁體中文，並補上詳細的更新說明。"
+  },
   "UI/UX: comprehensive visual and interactive overhaul": {
     title: "使用者介面與體驗 (UI/UX) 全面大升級",
     details: "1. 新增「一鍵複製」按鈕，提升操作效率。\n2. 建構全局角落彈出提示系統 (Toast)。\n3. 實裝動態模型載入進度條與拖曳動畫。\n4. 導入 Noto Sans TC 字體並優化卡片質感。\n5. 新增名單空狀態引導圖示，並凍結表格標題列。"
