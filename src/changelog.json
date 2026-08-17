@@ -1,5 +1,26 @@
 [
   {
+    "version": "v1.0.17",
+    "date": "2026-08-17",
+    "title": "Fix: correct UI layout and JSX syntax for model selector",
+    "details": "",
+    "hash": "ad7d684"
+  },
+  {
+    "version": "v1.0.16",
+    "date": "2026-08-17",
+    "title": "Fix: Render \\n correctly in styles description",
+    "details": "",
+    "hash": "22ea4e8"
+  },
+  {
+    "version": "v1.0.15",
+    "date": "2026-08-17",
+    "title": "Feat: Add app icon, watermarks, and automated changelog modal",
+    "details": "",
+    "hash": "a8821c5"
+  },
+  {
     "version": "v1.0.14",
     "date": "2026-08-17",
     "title": "Feat: Add legendary athletes styles (Kobe, Jordan, Nadal, Ohtani, Curry, Tai, Honnold)",

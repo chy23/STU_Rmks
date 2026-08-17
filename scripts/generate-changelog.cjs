@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 try {
-  // Get the last 50 commits
-  const logOutput = execSync('git log -n 50 --pretty=format:"%H|%s|%b|%cd" --date=short').toString();
+  // Get all commits to keep full history as requested
+  const logOutput = execSync('git log --pretty=format:"%H|%s|%b|%cd" --date=short').toString();
   
   const commits = logOutput.split('\n').filter(line => line.trim() !== '').map(line => {
     const parts = line.split('|');
