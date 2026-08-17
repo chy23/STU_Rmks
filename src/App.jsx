@@ -365,7 +365,7 @@ function App() {
       <div className="watermark bottom-right">網站建立自楊家驊老師</div>
 
       <header className="app-header">
-        <h1>學生評語生成系統 🎓</h1>
+        <h1><img src="./favicon.jpg" alt="logo" style={{width: '40px', height: '40px', verticalAlign: 'middle', marginRight: '10px', borderRadius: '8px'}}/>學生評語生成系統</h1>
         <p>基於 WebLLM 技術，確保您的資料 100% 在本地處理，無隱私外洩風險。</p>
         <button className="btn outline small mt-2" onClick={() => setIsLogOpen(true)}>
           <Info size={14} /> 更新紀錄 ({changelogData.length > 0 ? changelogData[0].version : 'v1.0.0'})
