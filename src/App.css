@@ -14,6 +14,7 @@
 }
 
 .app-header h1 {
+  font-family: var(--font-serif);
   font-size: 2.5rem;
   color: var(--primary);
   margin-bottom: 0.5rem;
@@ -36,7 +37,7 @@
   background: var(--surface-color);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   border: 1px solid var(--border-color);
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -63,6 +64,7 @@
 }
 
 .card-header h2 {
+  font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-main);
@@ -85,7 +87,7 @@
 
 .upload-area:hover {
   border-color: var(--primary);
-  background-color: #EEF2FF;
+  background-color: #F2EFE9;
   color: var(--primary);
 }
 
@@ -271,8 +273,6 @@ select:focus, input[type="text"]:focus, textarea:focus {
 }
 
 .scroll-cell {
-  max-height: 120px;
-  overflow-y: auto;
   white-space: pre-wrap;
   padding-right: 0.5rem;
 }
@@ -421,11 +421,11 @@ select:focus, input[type="text"]:focus, textarea:focus {
 }
 
 .custom-select-option:hover {
-  background-color: #EEF2FF;
+  background-color: #F2EFE9;
 }
 
 .custom-select-option.selected {
-  background-color: #EEF2FF;
+  background-color: #F2EFE9;
   border-left: 3px solid var(--primary);
 }
 
@@ -650,8 +650,8 @@ select:focus, input[type="text"]:focus, textarea:focus {
 /* Drag Active State */
 .upload-area.drag-active {
   border-color: var(--primary);
-  background-color: rgba(79, 70, 229, 0.05);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  background-color: #F2EFE9;
+  box-shadow: 0 0 0 4px rgba(39, 76, 59, 0.1);
   transform: scale(1.02);
 }
 
@@ -669,4 +669,13 @@ select:focus, input[type="text"]:focus, textarea:focus {
   height: 100%;
   background-color: var(--primary);
   transition: width 0.3s ease;
+}
+
+.actions-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 1.5rem;
 }

@@ -376,7 +376,7 @@ function App() {
         {/* Model Section */}
         <section className="card">
           <div className="card-header">
-            <h2>1. AI 模型設定</h2>
+            <h2>AI 模型設定</h2>
           </div>
           <div className="model-controls">
             <div className="custom-select-wrapper" ref={modelDropdownRef} style={{flex: 1}}>
@@ -385,7 +385,7 @@ function App() {
                 <ChevronDown size={18} color="var(--text-muted)" />
               </div>
               {isModelDropdownOpen && (
-                <div className="custom-select-menu">
+                <div className="custom-select-menu" role="listbox" id="style-options">
                   {AVAILABLE_MODELS.map(m => (
                     <div 
                       key={m.id} 
@@ -430,7 +430,7 @@ function App() {
         <div className="grid-2">
           <section className="card">
             <div className="card-header">
-              <h2>2. 上傳學生名單</h2>
+              <h2>上傳學生名單</h2>
             </div>
             <div 
               className={`upload-area ${isDragging ? 'drag-active' : ''}`} 
@@ -458,7 +458,7 @@ function App() {
 
           <section className="card">
             <div className="card-header">
-              <h2>3. 生成條件設定</h2>
+              <h2>生成條件設定</h2>
             </div>
             <div className="form-group">
               <label>評語風格：</label>
@@ -467,13 +467,39 @@ function App() {
                 <div 
                   className="custom-select-trigger" 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setIsDropdownOpen(!isDropdownOpen);
+                    } else if (e.key === 'Escape') {
+                      setIsDropdownOpen(false);
+                    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      if (!isDropdownOpen) {
+                        setIsDropdownOpen(true);
+                        return;
+                      }
+                      const currentIndex = STYLES.findIndex(s => s.name === style);
+                      let nextIndex = currentIndex;
+                      if (e.key === 'ArrowDown') {
+                        nextIndex = (currentIndex + 1) % STYLES.length;
+                      } else {
+                        nextIndex = (currentIndex - 1 + STYLES.length) % STYLES.length;
+                      }
+                      setStyle(STYLES[nextIndex].name);
+                    }
+                  }}
+                  tabIndex={0}
+                  role="combobox"
+                  aria-expanded={isDropdownOpen}
+                  aria-controls="style-options"
                 >
                   <span>{style}</span>
                   <ChevronDown size={16} />
                 </div>
                 
                 {isDropdownOpen && (
-                  <div className="custom-select-menu">
+                  <div className="custom-select-menu" role="listbox" id="style-options">
                     {STYLES.map(s => (
                       <div 
                         key={s.name} 
@@ -482,6 +508,8 @@ function App() {
                           setStyle(s.name);
                           setIsDropdownOpen(false);
                         }}
+                        role="option"
+                        aria-selected={style === s.name}
                       >
                         <div className="option-title">{s.name}</div>
                         {s.desc && <div className="option-desc">{s.desc}</div>}
@@ -521,22 +549,9 @@ function App() {
 
         {/* Data Table Section */}
         <section className="card full-width">
-          <div className="card-header flex-between">
-            <h2>4. 預覽與生成</h2>
-            <div className="actions">
-              {!isGenerating ? (
-                <button className="btn primary" onClick={generateAll} disabled={!engine || students.length === 0}>
-                  <Play size={16} /> 全部生成
-                </button>
-              ) : (
-                <button className="btn danger" onClick={stopGeneration}>
-                  <StopCircle size={16} /> 停止生成
-                </button>
-              )}
-              <button className="btn outline" onClick={exportExcel} disabled={students.length === 0 || students.every(s => s.status !== 'done')}>
-                <Download size={16} /> 匯出 Excel
-              </button>
-            </div>
+          <div className="card-header">
+            <h2>預覽與生成</h2>
+            
           </div>
           
           {students.length === 0 ? (

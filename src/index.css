@@ -1,14 +1,15 @@
 :root {
-  --primary: #4F46E5;
-  --primary-hover: #4338CA;
-  --bg-color: #F9FAFB;
+  --primary: #274C3B;
+  --primary-hover: #1A3629;
+  --bg-color: #F8F5F0;
   --surface-color: #FFFFFF;
-  --text-main: #111827;
-  --text-muted: #6B7280;
-  --border-color: #E5E7EB;
-  --success: #10B981;
-  --error: #EF4444;
+  --text-main: #2D2B2A;
+  --text-muted: #78736E;
+  --border-color: #E6E1D6;
+  --success: #2E6F40;
+  --error: #B94A48;
   --font-family: 'Inter', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Noto Serif TC', 'Songti TC', 'MingLiU', 'PT Serif', serif;
 }
 
 * {
