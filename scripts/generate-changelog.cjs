@@ -3,6 +3,10 @@ const fs = require('fs');
 const path = require('path');
 
 const translationMap = {
+  "Feat: Add Gemini Paid API dual-mode with gemini-4-argon fallback and confirmation dialog": {
+    title: "新增「Gemini 付費 API」雙模式與 gemini-4-argon 備援機制",
+    details: "1. 導入雙引擎模式，使用者可自由選擇「本機離線模式」或「雲端付費 API 模式」。\n2. 雲端 API 備援模型順序升級：gemini-3.8-flash → gemini-3.7-flash → gemini-3.6-flash → gemini-4-argon → gemini-3.1-pro-preview。\n3. 在調用最新旗艦模型 gemini-4-argon 前主動彈出確認視窗，提供「同意調用」、「略過嘗試下一個」或「取消」選項，保障使用者付費知情權。\n4. API Key 本機安全記憶與明文切換，支援 Esc 鍵快捷關閉確認對話框。"
+  },
   "Fix: resolve blank screen by fixing undefined handleDrag reference": {
     title: "修正網頁白屏問題",
     details: "修復拖曳上傳區的程式碼參照錯誤，解決畫面載入時出現一片空白的問題。"

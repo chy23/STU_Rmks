@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CreateMLCEngine } from "@mlc-ai/web-llm";
 import * as XLSX from 'xlsx';
-import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info, ChevronDown, StopCircle, Copy, Users, FileSpreadsheet } from 'lucide-react';
+import { Upload, Download, Settings, Play, CheckCircle2, Loader2, AlertCircle, Info, ChevronDown, StopCircle, Copy, Users, FileSpreadsheet, Key, Eye, EyeOff, Sparkles, Cpu, AlertTriangle } from 'lucide-react';
 import changelogData from './changelog.json';
 import './App.css';
 
@@ -12,6 +12,14 @@ const AVAILABLE_MODELS = [
   { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (3B) (Meta, 美國)", hint: "【限制與建議】硬體需求中。約需 3-4GB 記憶體。適合較新規格的電腦或高階手機，邏輯能力佳。" },
   { id: "Llama-3.1-8B-Instruct-q4f16_1-MLC", name: "Llama 3.1 (8B) (Meta, 美國)", hint: "【限制與建議】硬體需求高。需 8GB 以上記憶體與強大獨立顯卡。運算負載重，但能處理最複雜的寫作與邏輯推演。" },
   { id: "gemma-2-9b-it-q4f16_1-MLC", name: "Gemma 2 (9B) (Google, 美國)", hint: "【限制與建議】硬體需求最高。需 8GB 以上記憶體與高階獨立顯卡。若無獨顯可能導致網頁卡頓或崩潰，但文章品質與細節極佳。" }
+];
+
+const GEMINI_FALLBACK_CHAIN = [
+  { id: 'gemini-3.8-flash', name: 'gemini-3.8-flash', role: '第一優先首選模型', behavior: '自動直接調用（極速、最新版）' },
+  { id: 'gemini-3.7-flash', name: 'gemini-3.7-flash', role: '第 1 順位備援模型', behavior: '若前置失敗則自動切換' },
+  { id: 'gemini-3.6-flash', name: 'gemini-3.6-flash', role: '第 2 順位備援模型', behavior: '若前置失敗則自動切換' },
+  { id: 'gemini-4-argon', name: 'gemini-4-argon', role: '最新旗艦備援模型', behavior: '調用前主動彈窗詢問使用者確認 ⚠️', requireConfirm: true },
+  { id: 'gemini-3.1-pro-preview', name: 'gemini-3.1-pro-preview', role: '最終備援模型', behavior: '若略過或前置失敗時的最後防線' },
 ];
 
 const STYLES = [
@@ -109,9 +117,29 @@ function App() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLogOpen, setIsLogOpen] = useState(false);
 
+  // Engine Mode: 'local' (WebLLM) or 'api' (Gemini)
+  const [engineMode, setEngineMode] = useState(() => {
+    return localStorage.getItem('stu_rmks_engine_mode') || 'local';
+  });
+  const [apiKey, setApiKey] = useState(() => {
+    return localStorage.getItem('stu_rmks_gemini_api_key') || '';
+  });
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [modelConfirmDialog, setModelConfirmDialog] = useState(null);
+
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const shouldStopRef = useRef(false);
+  const apiAbortControllerRef = useRef(null);
+
+  const confirmModelUsage = (modelName) => {
+    return new Promise((resolve) => {
+      setModelConfirmDialog({
+        modelName,
+        resolve,
+      });
+    });
+  };
 
   const addToast = (msg, type = 'success') => {
     const id = Date.now();
@@ -134,6 +162,13 @@ function App() {
     if (engine && typeof engine.interruptGenerate === 'function') {
       engine.interruptGenerate();
     }
+    if (apiAbortControllerRef.current) {
+      apiAbortControllerRef.current.abort();
+    }
+    if (modelConfirmDialog) {
+      modelConfirmDialog.resolve('cancel');
+      setModelConfirmDialog(null);
+    }
     setIsGenerating(false);
   };
 
@@ -146,9 +181,22 @@ function App() {
         setIsModelDropdownOpen(false);
       }
     };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsLogOpen(false);
+        if (modelConfirmDialog) {
+          modelConfirmDialog.resolve('cancel');
+          setModelConfirmDialog(null);
+        }
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [modelConfirmDialog]);
 
   const translateProgress = (text) => {
     let t = text;
@@ -290,15 +338,105 @@ function App() {
 請直接輸出評語內容，不要包含其他問候語或解釋。`;
   };
 
+  const generateWithGemini = async (student, studentId) => {
+    if (!apiKey.trim()) {
+      alert("請先輸入有效的 Gemini API Key！");
+      return false;
+    }
+
+    const prompt = generatePrompt(student);
+    apiAbortControllerRef.current = new AbortController();
+    const signal = apiAbortControllerRef.current.signal;
+
+    let successText = "";
+    let lastError = null;
+
+    for (const modelItem of GEMINI_FALLBACK_CHAIN) {
+      if (shouldStopRef.current) break;
+
+      const modelName = modelItem.id;
+
+      if (modelItem.requireConfirm) {
+        const decision = await confirmModelUsage(modelName);
+        if (decision === 'cancel') {
+          shouldStopRef.current = true;
+          return false;
+        }
+        if (decision === 'skip') {
+          console.warn(`使用者選擇略過 ${modelName}，切換至下一個備援模型...`);
+          continue;
+        }
+      }
+
+      try {
+        const resp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.7,
+              }
+            }),
+            signal
+          }
+        );
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) {
+          throw new Error("模型未回傳評語內容");
+        }
+
+        successText = text.trim();
+        break;
+      } catch (err) {
+        if (err.name === 'AbortError' || shouldStopRef.current) {
+          return false;
+        }
+        console.warn(`模型 ${modelName} 失敗，嘗試下一個備援...`, err.message);
+        lastError = err;
+      }
+    }
+
+    if (shouldStopRef.current) return false;
+
+    if (successText) {
+      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, generatedComment: successText, status: "done" } : s));
+      return true;
+    } else {
+      console.error("Gemini 備援鏈全部失敗:", lastError);
+      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "error" } : s));
+      addToast(`生成失敗：${lastError?.message || "所有備援模型皆無法回應"}`, "error");
+      return false;
+    }
+  };
+
   const generateForStudent = async (studentId) => {
-    if (!engine) {
+    if (engineMode === 'local' && !engine) {
       alert("請先載入 AI 模型！");
+      return;
+    }
+    if (engineMode === 'api' && !apiKey.trim()) {
+      alert("請先輸入有效的 Gemini API Key！");
       return;
     }
     
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "generating", generatedComment: "" } : s));
-    
     const student = students.find(s => s.id === studentId);
+
+    if (engineMode === 'api') {
+      await generateWithGemini(student, studentId);
+      return;
+    }
+
     const prompt = generatePrompt(student);
 
     try {
@@ -328,6 +466,15 @@ function App() {
   };
 
   const generateAll = async () => {
+    if (engineMode === 'local' && !engine) {
+      alert("請先載入 AI 模型！");
+      return;
+    }
+    if (engineMode === 'api' && !apiKey.trim()) {
+      alert("請先輸入有效的 Gemini API Key！");
+      return;
+    }
+
     setIsGenerating(true);
     shouldStopRef.current = false;
     for (const student of students) {
@@ -378,52 +525,186 @@ function App() {
           <div className="card-header">
             <h2>AI 模型設定</h2>
           </div>
-          <div className="model-controls">
-            <div className="custom-select-wrapper" ref={modelDropdownRef} style={{flex: 1}}>
-              <div className="custom-select-trigger" onClick={() => !engine && !modelLoading && setIsModelDropdownOpen(!isModelDropdownOpen)}>
-                <span style={{fontWeight: 500}}>{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name}</span>
-                <ChevronDown size={18} color="var(--text-muted)" />
-              </div>
-              {isModelDropdownOpen && (
-                <div className="custom-select-menu" role="listbox" id="style-options">
-                  {AVAILABLE_MODELS.map(m => (
-                    <div 
-                      key={m.id} 
-                      className={`custom-select-option ${selectedModel === m.id ? 'selected' : ''}`}
-                      onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); }}
-                    >
-                      <div className="option-title">{m.name}</div>
-                      <div className="option-desc" style={{ marginTop: '4px' }}>
-                        {m.hint}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+
+          <div className="engine-mode-selector">
             <button 
-              className={`btn primary ${engine ? 'success' : ''}`}
-              onClick={handleInitModel} 
-              disabled={engine || modelLoading}
+              type="button"
+              className={`engine-tab-btn ${engineMode === 'local' ? 'active' : ''}`}
+              onClick={() => {
+                setEngineMode('local');
+                localStorage.setItem('stu_rmks_engine_mode', 'local');
+              }}
             >
-              {engine ? <><CheckCircle2 size={16}/> 模型已就緒</> : modelLoading ? <><Loader2 className="spin" size={16}/> 載入中...</> : '載入模型'}
+              <Cpu size={16} /> 本機離線模式 (WebLLM - 免費隱私)
+            </button>
+            <button 
+              type="button"
+              className={`engine-tab-btn ${engineMode === 'api' ? 'active' : ''}`}
+              onClick={() => {
+                setEngineMode('api');
+                localStorage.setItem('stu_rmks_engine_mode', 'api');
+              }}
+            >
+              <Sparkles size={16} /> 雲端付費 API 模式 (Gemini - 極速備援)
             </button>
           </div>
 
-          {loadProgress && !engine && (
-            <div className="progress-text">
-              <div style={{ marginBottom: '8px' }}>{loadProgress}</div>
-              {loadProgressObj && loadProgressObj.progress !== undefined && (
-                <div className="progress-bar-container">
-                  <div className="progress-bar-fill" style={{ width: `${Math.round(loadProgressObj.progress * 100)}%` }}></div>
+          {engineMode === 'local' ? (
+            <div>
+              <div className="model-controls">
+                <div className="custom-select-wrapper" ref={modelDropdownRef} style={{flex: 1}}>
+                  <div className="custom-select-trigger" onClick={() => !engine && !modelLoading && setIsModelDropdownOpen(!isModelDropdownOpen)}>
+                    <span style={{fontWeight: 500}}>{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name}</span>
+                    <ChevronDown size={18} color="var(--text-muted)" />
+                  </div>
+                  {isModelDropdownOpen && (
+                    <div className="custom-select-menu" role="listbox" id="style-options">
+                      {AVAILABLE_MODELS.map(m => (
+                        <div 
+                          key={m.id} 
+                          className={`custom-select-option ${selectedModel === m.id ? 'selected' : ''}`}
+                          onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); }}
+                        >
+                          <div className="option-title">{m.name}</div>
+                          <div className="option-desc" style={{ marginTop: '4px' }}>
+                            {m.hint}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button 
+                  className={`btn primary ${engine ? 'success' : ''}`}
+                  onClick={handleInitModel} 
+                  disabled={engine || modelLoading}
+                >
+                  {engine ? <><CheckCircle2 size={16}/> 模型已就緒</> : modelLoading ? <><Loader2 className="spin" size={16}/> 載入中...</> : '載入模型'}
+                </button>
+              </div>
+
+              {loadProgress && !engine && (
+                <div className="progress-text">
+                  <div style={{ marginBottom: '8px' }}>{loadProgress}</div>
+                  {loadProgressObj && loadProgressObj.progress !== undefined && (
+                    <div className="progress-bar-container">
+                      <div className="progress-bar-fill" style={{ width: `${Math.round(loadProgressObj.progress * 100)}%` }}></div>
+                    </div>
+                  )}
                 </div>
               )}
+              <div className="alert info">
+                <AlertCircle size={16}/>
+                初次載入需下載數GB模型檔至瀏覽器快取，請耐心等候。建議使用具備獨立顯卡或大記憶體之設備。
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Gemini API Key</span>
+                  <a 
+                    href="https://aistudio.google.com/app/apikey" 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    style={{ fontSize: '0.85rem', color: 'var(--primary)', textDecoration: 'underline' }}
+                  >
+                    取得免費 / 付費 API Key ↗
+                  </a>
+                </label>
+                <div className="api-key-wrapper">
+                  <input 
+                    type={showApiKey ? "text" : "password"} 
+                    placeholder="輸入您的 Google Gemini API Key (AIzaSy...)" 
+                    value={apiKey}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setApiKey(val);
+                      localStorage.setItem('stu_rmks_gemini_api_key', val);
+                    }}
+                  />
+                  <button 
+                    type="button" 
+                    className="toggle-visibility-btn" 
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    title={showApiKey ? "隱藏" : "顯示"}
+                  >
+                    {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="fallback-chain-container">
+                <div className="fallback-chain-title">
+                  <Sparkles size={15} color="var(--primary)" /> 目前完整的 AI 模型使用順序（自動嘗試與備援）：
+                </div>
+                <div style={{ overflowX: 'auto', marginTop: '0.5rem' }}>
+                  <table className="data-table" style={{ fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr>
+                        <th width="10%">順位</th>
+                        <th width="28%">模型名稱</th>
+                        <th width="27%">定位與說明</th>
+                        <th width="35%">調用行為</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {GEMINI_FALLBACK_CHAIN.map((item, idx) => (
+                        <tr key={item.id} style={item.id === 'gemini-4-argon' ? { backgroundColor: '#F5F3FF' } : {}}>
+                          <td style={{ fontWeight: 'bold', textAlign: 'center' }}>{idx + 1}</td>
+                          <td>
+                            <code style={{ 
+                              backgroundColor: item.id === 'gemini-4-argon' ? '#EDE9FE' : '#F2EFE9', 
+                              color: item.id === 'gemini-4-argon' ? '#6D28D9' : '#854D0E',
+                              padding: '2px 6px', 
+                              borderRadius: '4px',
+                              fontWeight: item.id === 'gemini-4-argon' ? 'bold' : 'normal'
+                            }}>
+                              {item.name}
+                            </code>
+                          </td>
+                          <td style={{ fontWeight: item.id === 'gemini-4-argon' ? 'bold' : 'normal' }}>{item.role}</td>
+                          <td>
+                            {item.id === 'gemini-4-argon' ? (
+                              <span style={{ color: '#7C3AED', fontWeight: 'bold' }}>{item.behavior}</span>
+                            ) : (
+                              item.behavior
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="alert info" style={{ marginTop: '1rem' }}>
+                <CheckCircle2 size={16} />
+                {apiKey.trim() ? (
+                  <span>API Key 已設定完成！可直接於下方點擊「全部生成」，極速調用雲端模型，無需預載數 GB 檔案。</span>
+                ) : (
+                  <span>請先於上方輸入您的 Gemini API Key 即可啟動雲端極速模式。Key 僅儲存於您的本機瀏覽器。</span>
+                )}
+              </div>
             </div>
           )}
-          <div className="alert info">
-            <AlertCircle size={16}/>
-            初次載入需下載數GB模型檔至瀏覽器快取，請耐心等候。建議使用具備獨立顯卡或大記憶體之設備。
-          </div>
+
+          {students.length > 0 && (
+            <div className="actions-footer">
+              {!isGenerating ? (
+                <button className="btn primary" onClick={generateAll} disabled={engineMode === 'local' ? !engine : !apiKey.trim()}>
+                  <Play size={16} /> 全部生成
+                </button>
+              ) : (
+                <button className="btn danger" onClick={stopGeneration}>
+                  <StopCircle size={16} /> 停止生成
+                </button>
+              )}
+              <button className="btn outline" onClick={exportExcel} disabled={students.length === 0 || students.every(s => s.status !== 'done')}>
+                <Download size={16} /> 匯出 Excel
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Upload & Settings Section */}
@@ -590,7 +871,7 @@ function App() {
                         <button 
                           className="btn small" 
                           onClick={() => generateForStudent(student.id)}
-                          disabled={student.status === 'generating' || !engine}
+                          disabled={student.status === 'generating' || (engineMode === 'local' ? !engine : !apiKey.trim())}
                         >
                           {student.status === 'generating' ? <Loader2 className="spin" size={14}/> : '生成'}
                         </button>
@@ -601,8 +882,102 @@ function App() {
               </table>
             </div>
           )}
+
+          {students.length > 0 && (
+            <div className="actions-footer">
+              {!isGenerating ? (
+                <button className="btn primary" onClick={generateAll} disabled={engineMode === 'local' ? !engine : !apiKey.trim()}>
+                  <Play size={16} /> 全部生成
+                </button>
+              ) : (
+                <button className="btn danger" onClick={stopGeneration}>
+                  <StopCircle size={16} /> 停止生成
+                </button>
+              )}
+              <button className="btn outline" onClick={exportExcel} disabled={students.length === 0 || students.every(s => s.status !== 'done')}>
+                <Download size={16} /> 匯出 Excel
+              </button>
+            </div>
+          )}
         </section>
       </main>
+
+
+      {/* Model Confirmation Modal */}
+      {modelConfirmDialog && (
+        <div 
+          className="confirm-modal-overlay" 
+          onClick={() => {
+            modelConfirmDialog.resolve('cancel');
+            setModelConfirmDialog(null);
+          }}
+        >
+          <div 
+            className="confirm-modal-card" 
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="confirm-modal-icon">
+              <Sparkles size={28} />
+            </div>
+
+            <h3 className="confirm-modal-title">調用模型確認</h3>
+
+            <div className="confirm-modal-badge-box">
+              <div className="confirm-modal-badge-label">
+                <span>目標備援模型</span>
+                <span className="confirm-model-tag">
+                  {modelConfirmDialog.modelName}
+                </span>
+              </div>
+              <p className="confirm-modal-desc">
+                前序快速模型暫無法回應，系統準備切換至最新高階備援模型 <b>{modelConfirmDialog.modelName}</b> 進行評語生成。
+              </p>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+              此模型為最新的旗艦級模型，請問是否同意調用？
+            </p>
+
+            <div className="confirm-modal-actions">
+              <button 
+                onClick={() => {
+                  const res = modelConfirmDialog.resolve;
+                  setModelConfirmDialog(null);
+                  res('confirm');
+                }}
+                className="btn primary"
+                style={{ width: '100%' }}
+              >
+                同意並調用 {modelConfirmDialog.modelName}
+              </button>
+
+              <button 
+                onClick={() => {
+                  const res = modelConfirmDialog.resolve;
+                  setModelConfirmDialog(null);
+                  res('skip');
+                }}
+                className="btn outline"
+                style={{ width: '100%' }}
+              >
+                略過此模型，嘗試下一個備援
+              </button>
+
+              <button 
+                onClick={() => {
+                  const res = modelConfirmDialog.resolve;
+                  setModelConfirmDialog(null);
+                  res('cancel');
+                }}
+                className="btn outline small"
+                style={{ width: '100%', border: 'none', color: 'var(--text-muted)' }}
+              >
+                取消本次生成
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Update Log Modal */}
       {isLogOpen && (
