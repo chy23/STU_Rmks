@@ -6,12 +6,60 @@ import changelogData from './changelog.json';
 import './App.css';
 
 const AVAILABLE_MODELS = [
-  { id: "gemma3-1b-it-q4f16_1-MLC", name: "Gemma 3 (1B) (Google, 美國)", hint: "【限制與建議】硬體需求極低。適合絕大多數手機與文書筆電。速度極快，但邏輯推論與長文生成較弱。" },
-  { id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (1B) (Meta, 美國)", hint: "【限制與建議】硬體需求極低。適合絕大多數手機與文書筆電。反應迅速，適合簡單日常寫作任務。" },
-  { id: "gemma-2-2b-it-q4f16_1-MLC", name: "Gemma 2 (2B) (Google, 美國)", hint: "【限制與建議】硬體需求低。約需 2GB 記憶體，適合一般筆電。回答品質與細節較 1B 模型提升不少。" },
-  { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: "Llama 3.2 (3B) (Meta, 美國)", hint: "【限制與建議】硬體需求中。約需 3-4GB 記憶體。適合較新規格的電腦或高階手機，邏輯能力佳。" },
-  { id: "Llama-3.1-8B-Instruct-q4f16_1-MLC", name: "Llama 3.1 (8B) (Meta, 美國)", hint: "【限制與建議】硬體需求高。需 8GB 以上記憶體與強大獨立顯卡。運算負載重，但能處理最複雜的寫作與邏輯推演。" },
-  { id: "gemma-2-9b-it-q4f16_1-MLC", name: "Gemma 2 (9B) (Google, 美國)", hint: "【限制與建議】硬體需求最高。需 8GB 以上記憶體與高階獨立顯卡。若無獨顯可能導致網頁卡頓或崩潰，但文章品質與細節極佳。" }
+  {
+    id: "gemma3-1b-it-q4f16_1-MLC",
+    name: "Gemma 3 (1B)",
+    vendor: "Google",
+    country: "美國",
+    size: "1B (約 10 億參數)",
+    features: "Google 最新第三代微型模型，架構極新、推論速度極快、繁中短文理解佳。",
+    advice: "硬體需求極低（約需 1GB 記憶體），絕大多數手機與無獨立顯卡之文書筆電皆可流暢運行；適合日常輕量任務。"
+  },
+  {
+    id: "Llama-3.2-1B-Instruct-q4f16_1-MLC",
+    name: "Llama 3.2 (1B)",
+    vendor: "Meta",
+    country: "美國",
+    size: "1B (約 10 億參數)",
+    features: "極度輕量迅速，對結構化指令與格式規範服從性高，反應即時。",
+    advice: "硬體需求極低（約需 1GB 記憶體），一般文書機皆可順暢執行；適合快速處理標準化格式內容。"
+  },
+  {
+    id: "gemma-2-2b-it-q4f16_1-MLC",
+    name: "Gemma 2 (2B)",
+    vendor: "Google",
+    country: "美國",
+    size: "2B (約 20 億參數)",
+    features: "體積與生成品質兼具的平衡型模型，回答語氣自然，細節掌握度顯著優於 1B 模型。",
+    advice: "硬體需求低（約需 1.5~2GB 記憶體），適合近三年內主流筆電與平板；推薦作為日常穩定產出首選。"
+  },
+  {
+    id: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
+    name: "Llama 3.2 (3B)",
+    vendor: "Meta",
+    country: "美國",
+    size: "3B (約 30 億參數)",
+    features: "效能與推論精確度的甜蜜點，邏輯掌握大幅超越 1B 模型，減少幻覺並能穩定遵循長文本脈絡。",
+    advice: "硬體需求中等（約需 2.5~3GB 記憶體），建議使用中高階筆電或 Apple 晶片設備；品質精良穩定。"
+  },
+  {
+    id: "Llama-3.1-8B-Instruct-q4f16_1-MLC",
+    name: "Llama 3.1 (8B)",
+    vendor: "Meta",
+    country: "美國",
+    size: "8B (約 80 億參數)",
+    features: "開源界旗艦級大模型，長文本推理、文學修辭與深度因果邏輯表現卓越。",
+    advice: "硬體需求高（需 8GB 以上獨立顯存或 Apple M 系列 16GB RAM）；若硬體達標，輸出深度最為完整。"
+  },
+  {
+    id: "gemma-2-9b-it-q4f16_1-MLC",
+    name: "Gemma 2 (9B)",
+    vendor: "Google",
+    country: "美國",
+    size: "9B (約 90 億參數)",
+    features: "Google 高階大腦容量模型，對繁體中文嚴謹文法與情緒轉折理解最透徹，邏輯綿密。",
+    advice: "硬體需求最高（需 8GB 以上獨顯或電競級獨立顯卡 / Apple M 系列高配機）；運算負載重但品質極佳。"
+  }
 ];
 
 const GEMINI_FALLBACK_CHAIN = [
@@ -554,7 +602,12 @@ function App() {
               <div className="model-controls">
                 <div className="custom-select-wrapper" ref={modelDropdownRef} style={{flex: 1}}>
                   <div className="custom-select-trigger" onClick={() => !engine && !modelLoading && setIsModelDropdownOpen(!isModelDropdownOpen)}>
-                    <span style={{fontWeight: 500}}>{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name}</span>
+                    <span style={{fontWeight: 500}}>
+                      {AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name}
+                      <span style={{ fontSize: '0.85rem', marginLeft: '0.5rem', color: 'var(--text-muted)' }}>
+                        ({AVAILABLE_MODELS.find(m => m.id === selectedModel)?.vendor} · {AVAILABLE_MODELS.find(m => m.id === selectedModel)?.country} · {AVAILABLE_MODELS.find(m => m.id === selectedModel)?.size})
+                      </span>
+                    </span>
                     <ChevronDown size={18} color="var(--text-muted)" />
                   </div>
                   {isModelDropdownOpen && (
@@ -565,9 +618,18 @@ function App() {
                           className={`custom-select-option ${selectedModel === m.id ? 'selected' : ''}`}
                           onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); }}
                         >
-                          <div className="option-title">{m.name}</div>
-                          <div className="option-desc" style={{ marginTop: '4px' }}>
-                            {m.hint}
+                          <div className="option-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <strong>{m.name}</strong>
+                            <span style={{ fontSize: '0.75rem', padding: '1px 6px', background: '#E0E7FF', color: '#4338CA', borderRadius: '4px' }}>
+                              🏢 {m.vendor} ({m.country})
+                            </span>
+                            <span style={{ fontSize: '0.75rem', padding: '1px 6px', background: '#F1F5F9', color: '#475569', borderRadius: '4px' }}>
+                              ⚖️ {m.size}
+                            </span>
+                          </div>
+                          <div className="option-desc" style={{ marginTop: '6px', fontSize: '0.8rem', lineHeight: '1.5' }}>
+                            <div><strong style={{ color: '#059669' }}>✨ 特點：</strong>{m.features}</div>
+                            <div><strong style={{ color: '#0284C7' }}>💡 建議：</strong>{m.advice}</div>
                           </div>
                         </div>
                       ))}
@@ -582,6 +644,23 @@ function App() {
                   {engine ? <><CheckCircle2 size={16}/> 模型已就緒</> : modelLoading ? <><Loader2 className="spin" size={16}/> 載入中...</> : '載入模型'}
                 </button>
               </div>
+
+              {/* 目前選用模型之詳細規格卡片 */}
+              {(() => {
+                const cur = AVAILABLE_MODELS.find(m => m.id === selectedModel);
+                if (!cur) return null;
+                return (
+                  <div style={{ marginTop: '0.75rem', padding: '0.75rem 1rem', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.35rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                      <span>🏢 廠商：{cur.vendor}</span>
+                      <span>🌍 國家：{cur.country}</span>
+                      <span>⚖️ 參數大小：{cur.size}</span>
+                    </div>
+                    <div style={{ color: '#059669', marginBottom: '0.2rem' }}><strong>✨ 核心特點：</strong>{cur.features}</div>
+                    <div style={{ color: '#0284C7' }}><strong>💡 設備與使用建議：</strong>{cur.advice}</div>
+                  </div>
+                );
+              })()}
 
               {loadProgress && !engine && (
                 <div className="progress-text">

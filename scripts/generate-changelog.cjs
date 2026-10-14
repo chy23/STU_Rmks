@@ -3,6 +3,10 @@ const fs = require('fs');
 const path = require('path');
 
 const translationMap = {
+  "Feat: 統一 WebLLM 模型規格，標註廠商、國家、大小、特點與建議": {
+    title: "統一 WebLLM 本地模型規格與資訊卡",
+    details: "1. 統一保留 6 款精選開源模型（Gemma 3 1B、Llama 3.2 1B/3B、Gemma 2 2B/9B、Llama 3.1 8B）。\n2. 於下拉選單與資訊卡全面標註模型的「廠商、國家、參數大小、核心特點、設備與使用建議」，以統一規格呈現。"
+  },
   "Feat: Add Gemini Paid API dual-mode with gemini-4-argon fallback and confirmation dialog": {
     title: "新增「Gemini 付費 API」雙模式與 gemini-4-argon 備援機制",
     details: "1. 導入雙引擎模式，使用者可自由選擇「本機離線模式」或「雲端付費 API 模式」。\n2. 雲端 API 備援模型順序升級：gemini-3.8-flash → gemini-3.7-flash → gemini-3.6-flash → gemini-4-argon → gemini-3.1-pro-preview。\n3. 在調用最新旗艦模型 gemini-4-argon 前主動彈出確認視窗，提供「同意調用」、「略過嘗試下一個」或「取消」選項，保障使用者付費知情權。\n4. API Key 本機安全記憶與明文切換，支援 Esc 鍵快捷關閉確認對話框。"
