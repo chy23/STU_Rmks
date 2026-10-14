@@ -63,11 +63,52 @@ const AVAILABLE_MODELS = [
 ];
 
 const GEMINI_FALLBACK_CHAIN = [
-  { id: 'gemini-3.8-flash', name: 'gemini-3.8-flash', role: '第一優先首選模型', behavior: '自動直接調用（極速、最新版）' },
-  { id: 'gemini-3.7-flash', name: 'gemini-3.7-flash', role: '第 1 順位備援模型', behavior: '若前置失敗則自動切換' },
-  { id: 'gemini-3.6-flash', name: 'gemini-3.6-flash', role: '第 2 順位備援模型', behavior: '若前置失敗則自動切換' },
-  { id: 'gemini-4-argon', name: 'gemini-4-argon', role: '最新旗艦備援模型', behavior: '調用前主動彈窗詢問使用者確認 ⚠️', requireConfirm: true },
-  { id: 'gemini-3.1-pro-preview', name: 'gemini-3.1-pro-preview', role: '最終備援模型', behavior: '若略過或前置失敗時的最後防線' },
+  { 
+    id: 'gemini-3.8-flash', 
+    name: 'gemini-3.8-flash', 
+    role: '第一優先首選模型', 
+    behavior: '自動直接調用（極速、最新版）',
+    pricing: '支援免費額度；付費 $0.75 / 1M 輸入, $3.75 / 1M 輸出',
+    pros: '最聰明之 Flash 模型，長程程式碼、多步驟自主代理與繁中理解極佳，推論極速且費用親民。',
+    cons: '面對極深奧之數理科研長論證時，推論深度略遜於 Argon 旗艦。'
+  },
+  { 
+    id: 'gemini-3.7-flash', 
+    name: 'gemini-3.7-flash', 
+    role: '第 1 順位備援模型', 
+    behavior: '若前置失敗則自動切換',
+    pricing: '支援免費額度；付費 $0.75 / 1M 輸入, $3.75 / 1M 輸出',
+    pros: '大量驗證之成熟版本，指令遵循度高，適合一般代理功能與教學分析任務。',
+    cons: '新一代多步驟複雜推理演繹略低於 3.8 Flash。'
+  },
+  { 
+    id: 'gemini-3.6-flash', 
+    name: 'gemini-3.6-flash', 
+    role: '第 2 順位備援模型', 
+    behavior: '若前置失敗則自動切換',
+    pricing: '支援免費額度；付費 $0.75 / 1M 輸入, $3.75 / 1M 輸出',
+    pros: '穩定性極高的基底模型，速度與多模態兼具，高可用性備援守門員。',
+    cons: '版本較早，上下文精確度與推理細節略不及 3.8 / 3.7。'
+  },
+  { 
+    id: 'gemini-4-argon', 
+    name: 'gemini-4-argon', 
+    role: '最新旗艦備援模型', 
+    behavior: '調用前主動彈窗詢問使用者確認 ⚠️', 
+    requireConfirm: true,
+    pricing: '無免費額度；付費 $2.00 / 1M 輸入, $10.00 / 1M 輸出 (思考型旗艦)',
+    pros: 'Google 主打頂級推論模型，深度推理、長解碼無人能及，專為極端複雜任務打造。',
+    cons: '價格較高 (約 Flash 的 2.7~3.3 倍) 且生成較久，需彈窗確認以防非預期計費。'
+  },
+  { 
+    id: 'gemini-3.1-pro-preview', 
+    name: 'gemini-3.1-pro-preview', 
+    role: '最終備援模型', 
+    behavior: '若略過或前置失敗時的最後防線',
+    pricing: '無免費額度；付費 $2.00~$4.00 / 1M 輸入, $12.00~$18.00 / 1M 輸出',
+    pros: '第 3 代 Pro 旗艦架構，長上下文穩定性高、多模態理解深入。',
+    cons: '無免費額度，長提示詞單價加倍，成本顯著高於 Flash。'
+  },
 ];
 
 const STYLES = [
@@ -754,6 +795,35 @@ function App() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* 模型費用與優劣分析備註區塊 */}
+                <div style={{ marginTop: '0.85rem', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '0.85rem 1rem', fontSize: '0.82rem', lineHeight: '1.6' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, color: '#1E293B', marginBottom: '0.5rem' }}>
+                    <Info size={15} color="#4F46E5" />
+                    <span>各模型費用與優劣分析備註（參考 Google 官方定價標準）</span>
+                  </div>
+                  <div style={{ display: 'grid', gap: '0.6rem' }}>
+                    {GEMINI_FALLBACK_CHAIN.map((item, idx) => (
+                      <div key={item.id} style={{ 
+                        padding: '0.5rem 0.75rem', 
+                        background: item.id === 'gemini-4-argon' ? '#FAF5FF' : '#FFFFFF', 
+                        border: `1px solid ${item.id === 'gemini-4-argon' ? '#DDD6FE' : '#F1F5F9'}`,
+                        borderRadius: '6px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                          <span style={{ fontWeight: 700, color: item.id === 'gemini-4-argon' ? '#7C3AED' : '#0F172A' }}>
+                            {idx + 1}. {item.name} ({item.role})
+                          </span>
+                          <span style={{ fontSize: '0.75rem', background: item.id === 'gemini-4-argon' ? '#EDE9FE' : '#F1F5F9', color: item.id === 'gemini-4-argon' ? '#6D28D9' : '#475569', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                            💰 {item.pricing}
+                          </span>
+                        </div>
+                        <div style={{ color: '#059669' }}><strong>👍 優點：</strong>{item.pros}</div>
+                        <div style={{ color: '#B45309' }}><strong>⚠️ 限制：</strong>{item.cons}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
