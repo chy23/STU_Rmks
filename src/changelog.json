@@ -1,10 +1,24 @@
 [
   {
+    "version": "v1.0.30",
+    "date": "2026-10-14",
+    "title": "UI: 在 API 模型備援順序表下方新增各模型費用與優劣分析備註",
+    "details": "",
+    "hash": "59f487a"
+  },
+  {
+    "version": "v1.0.29",
+    "date": "2026-10-14",
+    "title": "chore: update dist index.html",
+    "details": "",
+    "hash": "80ea97e"
+  },
+  {
     "version": "v1.0.28",
     "date": "2026-10-14",
     "title": "統一 WebLLM 本地模型規格與資訊卡",
     "details": "1. 統一保留 6 款精選開源模型（Gemma 3 1B、Llama 3.2 1B/3B、Gemma 2 2B/9B、Llama 3.1 8B）。\n2. 於下拉選單與資訊卡全面標註模型的「廠商、國家、參數大小、核心特點、設備與使用建議」，以統一規格呈現。",
-    "hash": "46584b1"
+    "hash": "fb7f8bc"
   },
   {
     "version": "v1.0.27",

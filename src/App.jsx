@@ -93,7 +93,7 @@ const GEMINI_FALLBACK_CHAIN = [
   { 
     id: 'gemini-4-argon', 
     name: 'gemini-4-argon', 
-    role: '最新旗艦備援模型', 
+    role: '旗艦推理首選備援 (最新版)', 
     behavior: '調用前主動彈窗詢問使用者確認 ⚠️', 
     requireConfirm: true,
     pricing: '無免費額度；付費 $2.00 / 1M 輸入, $10.00 / 1M 輸出 (思考型旗艦)',
@@ -103,7 +103,7 @@ const GEMINI_FALLBACK_CHAIN = [
   { 
     id: 'gemini-3.1-pro-preview', 
     name: 'gemini-3.1-pro-preview', 
-    role: '最終備援模型', 
+    role: '旗艦推理次選備援 (最終防線)', 
     behavior: '若略過或前置失敗時的最後防線',
     pricing: '無免費額度；付費 $2.00~$4.00 / 1M 輸入, $12.00~$18.00 / 1M 輸出',
     pros: '第 3 代 Pro 旗艦架構，長上下文穩定性高、多模態理解深入。',
