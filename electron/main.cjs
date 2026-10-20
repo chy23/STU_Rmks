@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -64,6 +64,68 @@ async function createWindow() {
       contextIsolation: true,
       sandbox: false
     }
+  });
+
+  // 設定標準選單（包含繁體中文剪貼簿與除錯工具）
+  const menuTemplate = [
+    ...(process.platform === 'darwin' ? [{
+      label: '學生評語生成系統',
+      submenu: [
+        { role: 'about', label: '關於 學生評語生成系統' },
+        { type: 'separator' },
+        { role: 'services', label: '服務' },
+        { type: 'separator' },
+        { role: 'hide', label: '隱藏' },
+        { role: 'hideOthers', label: '隱藏其他' },
+        { role: 'unhide', label: '全部顯示' },
+        { type: 'separator' },
+        { role: 'quit', label: '結束' }
+      ]
+    }] : []),
+    {
+      label: '編輯',
+      submenu: [
+        { role: 'undo', label: '復原' },
+        { role: 'redo', label: '重作' },
+        { type: 'separator' },
+        { role: 'cut', label: '剪下' },
+        { role: 'copy', label: '複製' },
+        { role: 'paste', label: '貼上' },
+        { role: 'selectAll', label: '全選' }
+      ]
+    },
+    {
+      label: '檢視',
+      submenu: [
+        { role: 'reload', label: '重新整理' },
+        { role: 'forceReload', label: '強制重新整理' },
+        { role: 'toggleDevTools', label: '開發人員工具' },
+        { type: 'separator' },
+        { role: 'resetZoom', label: '實際大小' },
+        { role: 'zoomIn', label: '放大' },
+        { role: 'zoomOut', label: '縮小' },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: '切換全螢幕' }
+      ]
+    },
+    {
+      label: '視窗',
+      submenu: [
+        { role: 'minimize', label: '最小化' },
+        { role: 'zoom', label: '縮放' },
+        ...(process.platform === 'darwin' ? [
+          { type: 'separator' },
+          { role: 'front', label: '移至最前' }
+        ] : [
+          { role: 'close', label: '關閉' }
+        ])
+      ]
+    }
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    console.error('頁面載入失敗:', errorCode, errorDescription, validatedURL);
   });
 
   const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
