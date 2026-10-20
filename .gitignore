@@ -1,4 +1,8 @@
 node_modules
 dist
+release
+models
+*.gguf
 .env
 .DS_Store
+

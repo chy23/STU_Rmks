@@ -206,9 +206,18 @@ function App() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLogOpen, setIsLogOpen] = useState(false);
 
-  // Engine Mode: 'local' (WebLLM) or 'api' (Gemini)
+  const isDesktop = typeof window !== 'undefined' && !!window.electronAPI?.isDesktop;
+  const [desktopStatus, setDesktopStatus] = useState(null);
+  const [selectedDesktopModel, setSelectedDesktopModel] = useState('Llama-3.2-3B-Instruct-Q4_K_M.gguf');
+  const [desktopLoading, setDesktopLoading] = useState(false);
+  const [isDesktopModelDropdownOpen, setIsDesktopModelDropdownOpen] = useState(false);
+  const desktopModelDropdownRef = useRef(null);
+
+  // Engine Mode: 'desktop', 'local' (WebLLM), or 'api' (Gemini)
   const [engineMode, setEngineMode] = useState(() => {
-    return localStorage.getItem('stu_rmks_engine_mode') || 'local';
+    const saved = localStorage.getItem('stu_rmks_engine_mode');
+    if (saved) return saved;
+    return (typeof window !== 'undefined' && window.electronAPI?.isDesktop) ? 'desktop' : 'local';
   });
   const [apiKey, setApiKey] = useState(() => {
     return localStorage.getItem('stu_rmks_gemini_api_key') || '';
@@ -254,11 +263,44 @@ function App() {
     if (apiAbortControllerRef.current) {
       apiAbortControllerRef.current.abort();
     }
+    if (isDesktop && window.electronAPI?.stopGeneration) {
+      window.electronAPI.stopGeneration();
+    }
     if (modelConfirmDialog) {
       modelConfirmDialog.resolve('cancel');
       setModelConfirmDialog(null);
     }
     setIsGenerating(false);
+  };
+
+  useEffect(() => {
+    if (isDesktop && window.electronAPI?.getModelsStatus) {
+      window.electronAPI.getModelsStatus().then(status => {
+        setDesktopStatus(status);
+        if (status.currentLoadedModel) {
+          setSelectedDesktopModel(status.currentLoadedModel);
+        }
+      }).catch(err => console.error("無法取得桌面模型狀態:", err));
+    }
+  }, [isDesktop]);
+
+  const handleLoadDesktopModel = async () => {
+    if (!isDesktop || !window.electronAPI) return;
+    setDesktopLoading(true);
+    try {
+      const res = await window.electronAPI.loadModel(selectedDesktopModel);
+      if (res.success) {
+        addToast(`離線模型已就緒 (${res.gpu?.toUpperCase() || 'GPU'} 硬體加速)`);
+        const status = await window.electronAPI.getModelsStatus();
+        setDesktopStatus(status);
+      } else {
+        alert("模型載入失敗: " + res.error);
+      }
+    } catch (e) {
+      alert("模型載入失敗: " + e.message);
+    } finally {
+      setDesktopLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -268,6 +310,9 @@ function App() {
       }
       if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target)) {
         setIsModelDropdownOpen(false);
+      }
+      if (desktopModelDropdownRef.current && !desktopModelDropdownRef.current.contains(event.target)) {
+        setIsDesktopModelDropdownOpen(false);
       }
     };
     const handleKeyDown = (event) => {
@@ -518,6 +563,46 @@ function App() {
       return;
     }
     
+    if (engineMode === 'desktop') {
+      if (!isDesktop || !window.electronAPI) {
+        alert("桌面端 API 未就緒！");
+        return;
+      }
+      if (!desktopStatus || desktopStatus.currentLoadedModel !== selectedDesktopModel) {
+        alert("請先在上方點擊「載入離線模型」完成模型初始化！");
+        return;
+      }
+
+      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "generating", generatedComment: "" } : s));
+      const student = students.find(s => s.id === studentId);
+      const prompt = generatePrompt(student);
+
+      let currentText = "";
+      const cleanupChunk = window.electronAPI.onChunk((chunk) => {
+        if (shouldStopRef.current) return;
+        currentText += chunk;
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, generatedComment: currentText } : s));
+      });
+
+      try {
+        const res = await window.electronAPI.generateComment({ prompt });
+        cleanupChunk();
+        if (res.success) {
+          setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "done" } : s));
+        } else if (res.aborted) {
+          setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "idle" } : s));
+        } else {
+          setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "error" } : s));
+          addToast("生成失敗: " + (res.error || "未知錯誤"), "error");
+        }
+      } catch (err) {
+        cleanupChunk();
+        console.error(err);
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "error" } : s));
+      }
+      return;
+    }
+
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "generating", generatedComment: "" } : s));
     const student = students.find(s => s.id === studentId);
 
@@ -555,11 +640,19 @@ function App() {
   };
 
   const generateAll = async () => {
-    if (engineMode === 'local' && !engine) {
+    if (engineMode === 'desktop') {
+      if (!isDesktop || !window.electronAPI) {
+        alert("桌面端 API 未就緒！");
+        return;
+      }
+      if (!desktopStatus || desktopStatus.currentLoadedModel !== selectedDesktopModel) {
+        alert("請先在上方點擊「載入離線模型」完成模型初始化！");
+        return;
+      }
+    } else if (engineMode === 'local' && !engine) {
       alert("請先載入 AI 模型！");
       return;
-    }
-    if (engineMode === 'api' && !apiKey.trim()) {
+    } else if (engineMode === 'api' && !apiKey.trim()) {
       alert("請先輸入有效的 Gemini API Key！");
       return;
     }
@@ -616,6 +709,18 @@ function App() {
           </div>
 
           <div className="engine-mode-selector">
+            {isDesktop && (
+              <button 
+                type="button"
+                className={`engine-tab-btn ${engineMode === 'desktop' ? 'active' : ''}`}
+                onClick={() => {
+                  setEngineMode('desktop');
+                  localStorage.setItem('stu_rmks_engine_mode', 'desktop');
+                }}
+              >
+                <Cpu size={16} /> 桌面原生離線模型 (Metal / Vulkan 加速 ⚡)
+              </button>
+            )}
             <button 
               type="button"
               className={`engine-tab-btn ${engineMode === 'local' ? 'active' : ''}`}
@@ -624,7 +729,7 @@ function App() {
                 localStorage.setItem('stu_rmks_engine_mode', 'local');
               }}
             >
-              <Cpu size={16} /> 本機離線模式 (WebLLM - 免費隱私)
+              <Cpu size={16} /> 瀏覽器本機離線 (WebLLM - 免費)
             </button>
             <button 
               type="button"
@@ -637,6 +742,74 @@ function App() {
               <Sparkles size={16} /> 雲端付費 API 模式 (Gemini - 極速備援)
             </button>
           </div>
+
+          {engineMode === 'desktop' && (
+            <div>
+              <div className="model-controls">
+                <div className="custom-select-wrapper" ref={desktopModelDropdownRef} style={{flex: 1}}>
+                  <div className="custom-select-trigger" onClick={() => !desktopLoading && setIsDesktopModelDropdownOpen(!isDesktopModelDropdownOpen)}>
+                    <span style={{fontWeight: 500}}>
+                      {selectedDesktopModel === 'Llama-3.2-3B-Instruct-Q4_K_M.gguf' ? 'Llama 3.2 (3B) Instruct (Meta - 離線原生)' : 'Gemma 2 (9B) Instruct (Google - 離線原生)'}
+                      <span style={{ fontSize: '0.85rem', marginLeft: '0.5rem', color: 'var(--text-muted)' }}>
+                        ({selectedDesktopModel === 'Llama-3.2-3B-Instruct-Q4_K_M.gguf' ? '2.0 GB · 極速流暢推薦' : '5.8 GB · 旗艦深度文采'})
+                      </span>
+                    </span>
+                    <ChevronDown size={18} color="var(--text-muted)" />
+                  </div>
+                  {isDesktopModelDropdownOpen && (
+                    <div className="custom-select-menu" role="listbox">
+                      <div 
+                        className={`custom-select-option ${selectedDesktopModel === 'Llama-3.2-3B-Instruct-Q4_K_M.gguf' ? 'selected' : ''}`}
+                        onClick={() => { 
+                          setSelectedDesktopModel('Llama-3.2-3B-Instruct-Q4_K_M.gguf'); 
+                          setIsDesktopModelDropdownOpen(false); 
+                        }}
+                      >
+                        <div className="option-title">Llama 3.2 (3B) Instruct (Meta, 美國) - 2.0 GB</div>
+                        <div className="option-desc" style={{ marginTop: '4px' }}>
+                          【特點】極速流暢、記憶體佔用低。Apple Silicon M 系列或一般 Windows 電腦均可秒速響應，日常評語最佳首選。
+                        </div>
+                      </div>
+                      <div 
+                        className={`custom-select-option ${selectedDesktopModel === 'gemma-2-9b-it-Q4_K_M.gguf' ? 'selected' : ''}`}
+                        onClick={() => { 
+                          setSelectedDesktopModel('gemma-2-9b-it-Q4_K_M.gguf'); 
+                          setIsDesktopModelDropdownOpen(false); 
+                        }}
+                      >
+                        <div className="option-title">Gemma 2 (9B) Instruct (Google, 美國) - 5.8 GB</div>
+                        <div className="option-desc" style={{ marginTop: '4px' }}>
+                          【特點】Google 頂級旗艦開源模型，文學素養極高，文字修辭細膩優雅，適合長篇評語與哲理深度刻劃。需 8GB 以上記憶體。
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button 
+                  className={`btn primary ${desktopStatus?.currentLoadedModel === selectedDesktopModel ? 'success' : ''}`}
+                  onClick={handleLoadDesktopModel} 
+                  disabled={desktopLoading}
+                >
+                  {desktopStatus?.currentLoadedModel === selectedDesktopModel ? (
+                    <><CheckCircle2 size={16}/> 模型已就緒 ({desktopStatus?.gpuEngine?.toUpperCase() || 'GPU'} 加速)</>
+                  ) : desktopLoading ? (
+                    <><Loader2 className="spin" size={16}/> 載入中...</>
+                  ) : (
+                    '載入離線模型'
+                  )}
+                </button>
+              </div>
+
+              <div className="alert info" style={{ marginTop: '1rem' }}>
+                <CheckCircle2 size={16} />
+                <span>
+                  <b>桌面原生硬體加速 ({desktopStatus?.gpuEngine === 'metal' ? 'Apple Silicon Metal ⚡' : (desktopStatus?.gpuEngine || 'GPU').toUpperCase()})</b>：
+                  模型直接於本機硬體執行，免聯網、零 API 費用，學生資料 100% 留存在您的電腦中。
+                </span>
+              </div>
+            </div>
+          )}
 
           {engineMode === 'local' ? (
             <div>
@@ -841,7 +1014,7 @@ function App() {
           {students.length > 0 && (
             <div className="actions-footer">
               {!isGenerating ? (
-                <button className="btn primary" onClick={generateAll} disabled={engineMode === 'local' ? !engine : !apiKey.trim()}>
+                <button className="btn primary" onClick={generateAll} disabled={engineMode === 'desktop' ? (desktopStatus?.currentLoadedModel !== selectedDesktopModel) : engineMode === 'local' ? !engine : !apiKey.trim()}>
                   <Play size={16} /> 全部生成
                 </button>
               ) : (
@@ -1020,7 +1193,7 @@ function App() {
                         <button 
                           className="btn small" 
                           onClick={() => generateForStudent(student.id)}
-                          disabled={student.status === 'generating' || (engineMode === 'local' ? !engine : !apiKey.trim())}
+                          disabled={student.status === 'generating' || (engineMode === 'desktop' ? (desktopStatus?.currentLoadedModel !== selectedDesktopModel) : engineMode === 'local' ? !engine : !apiKey.trim())}
                         >
                           {student.status === 'generating' ? <Loader2 className="spin" size={14}/> : '生成'}
                         </button>
@@ -1035,7 +1208,7 @@ function App() {
           {students.length > 0 && (
             <div className="actions-footer">
               {!isGenerating ? (
-                <button className="btn primary" onClick={generateAll} disabled={engineMode === 'local' ? !engine : !apiKey.trim()}>
+                <button className="btn primary" onClick={generateAll} disabled={engineMode === 'desktop' ? (desktopStatus?.currentLoadedModel !== selectedDesktopModel) : engineMode === 'local' ? !engine : !apiKey.trim()}>
                   <Play size={16} /> 全部生成
                 </button>
               ) : (

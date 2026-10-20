@@ -3,6 +3,10 @@ const fs = require('fs');
 const path = require('path');
 
 const translationMap = {
+  "Feat: Add Electron desktop app infrastructure with offline native models (Llama-3.2-3B and Gemma-2-9B)": {
+    title: "建置桌面原生 App 架構（支援 Mac M系列與 Windows，內建 Llama-3.2-3B 與 Gemma-2-9B）",
+    details: "1. 導入 Electron 桌面端原生架構與 node-llama-cpp 推論引擎，支援一鍵打包為 macOS (Apple Silicon arm64 .dmg) 與 Windows (x64 .exe)。\n2. 內建兩大本地離線 GGUF 模型：Llama-3.2-3B-Instruct (極速日常首選) 與 Gemma-2-9B (旗艦深度文采)，支援 Apple Silicon Metal 與 Windows Vulkan/DirectML 硬體加速。\n3. 提供全自動模型下載腳本 (npm run download:models) 與自動封裝打包 (extraResources)。\n4. 介面無縫適配：桌面模式下自動優先啟動原生硬體加速離線推論，保留極致隱私與零連網開箱即用體驗。"
+  },
   "Feat: 統一 WebLLM 模型規格，標註廠商、國家、大小、特點與建議": {
     title: "統一 WebLLM 本地模型規格與資訊卡",
     details: "1. 統一保留 6 款精選開源模型（Gemma 3 1B、Llama 3.2 1B/3B、Gemma 2 2B/9B、Llama 3.1 8B）。\n2. 於下拉選單與資訊卡全面標註模型的「廠商、國家、參數大小、核心特點、設備與使用建議」，以統一規格呈現。"

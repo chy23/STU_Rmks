@@ -1,5 +1,19 @@
 [
   {
+    "version": "v1.0.32",
+    "date": "2026-10-20",
+    "title": "建置桌面原生 App 架構（支援 Mac M系列與 Windows，內建 Llama-3.2-3B 與 Gemma-2-9B）",
+    "details": "1. 導入 Electron 桌面端原生架構與 node-llama-cpp 推論引擎，支援一鍵打包為 macOS (Apple Silicon arm64 .dmg) 與 Windows (x64 .exe)。\n2. 內建兩大本地離線 GGUF 模型：Llama-3.2-3B-Instruct (極速日常首選) 與 Gemma-2-9B (旗艦深度文采)，支援 Apple Silicon Metal 與 Windows Vulkan/DirectML 硬體加速。\n3. 提供全自動模型下載腳本 (npm run download:models) 與自動封裝打包 (extraResources)。\n4. 介面無縫適配：桌面模式下自動優先啟動原生硬體加速離線推論，保留極致隱私與零連網開箱即用體驗。",
+    "hash": "4210c4e"
+  },
+  {
+    "version": "v1.0.31",
+    "date": "2026-10-14",
+    "title": "UI: 明確標註 Argon 與 Pro 為旗艦系列模型備援階層",
+    "details": "",
+    "hash": "34431aa"
+  },
+  {
     "version": "v1.0.30",
     "date": "2026-10-14",
     "title": "UI: 在 API 模型備援順序表下方新增各模型費用與優劣分析備註",
