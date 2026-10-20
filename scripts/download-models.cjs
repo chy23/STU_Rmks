@@ -11,11 +11,11 @@ const MODELS = [
     desc: 'Llama 3.2 (3B) Instruct Q4_K_M (~2.0 GB)'
   },
   {
-    id: 'gemma-2-9b',
-    fileName: 'gemma-2-9b-it-Q4_K_M.gguf',
-    url: 'https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/resolve/main/gemma-2-9b-it-Q4_K_M.gguf',
-    sizeBytes: 5880000000,
-    desc: 'Gemma 2 (9B) Instruct Q4_K_M (~5.8 GB)'
+    id: 'gemma-4-12b',
+    fileName: 'gemma-4-12B-it-Q4_K_M.gguf',
+    url: 'https://huggingface.co/bartowski/gemma-4-12B-it-GGUF/resolve/main/gemma-4-12B-it-Q4_K_M.gguf',
+    sizeBytes: 7660000000,
+    desc: 'Gemma 4 (12B) Instruct Q4_K_M (~7.7 GB)'
   }
 ];
 

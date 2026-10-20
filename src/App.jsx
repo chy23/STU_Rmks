@@ -749,9 +749,9 @@ function App() {
                 <div className="custom-select-wrapper" ref={desktopModelDropdownRef} style={{flex: 1}}>
                   <div className="custom-select-trigger" onClick={() => !desktopLoading && setIsDesktopModelDropdownOpen(!isDesktopModelDropdownOpen)}>
                     <span style={{fontWeight: 500}}>
-                      {selectedDesktopModel === 'Llama-3.2-3B-Instruct-Q4_K_M.gguf' ? 'Llama 3.2 (3B) Instruct (Meta - 離線原生)' : 'Gemma 2 (9B) Instruct (Google - 離線原生)'}
+                      {selectedDesktopModel === 'Llama-3.2-3B-Instruct-Q4_K_M.gguf' ? 'Llama 3.2 (3B) Instruct (Meta - 離線原生)' : 'Gemma 4 (12B) Instruct (Google - 旗艦深度)'}
                       <span style={{ fontSize: '0.85rem', marginLeft: '0.5rem', color: 'var(--text-muted)' }}>
-                        ({selectedDesktopModel === 'Llama-3.2-3B-Instruct-Q4_K_M.gguf' ? '2.0 GB · 極速流暢推薦' : '5.8 GB · 旗艦深度文采'})
+                        ({selectedDesktopModel === 'Llama-3.2-3B-Instruct-Q4_K_M.gguf' ? '2.0 GB · 極速流暢推薦' : '7.7 GB · Google 旗艦大模型'})
                       </span>
                     </span>
                     <ChevronDown size={18} color="var(--text-muted)" />
@@ -771,15 +771,15 @@ function App() {
                         </div>
                       </div>
                       <div 
-                        className={`custom-select-option ${selectedDesktopModel === 'gemma-2-9b-it-Q4_K_M.gguf' ? 'selected' : ''}`}
+                        className={`custom-select-option ${selectedDesktopModel === 'gemma-4-12B-it-Q4_K_M.gguf' ? 'selected' : ''}`}
                         onClick={() => { 
-                          setSelectedDesktopModel('gemma-2-9b-it-Q4_K_M.gguf'); 
+                          setSelectedDesktopModel('gemma-4-12B-it-Q4_K_M.gguf'); 
                           setIsDesktopModelDropdownOpen(false); 
                         }}
                       >
-                        <div className="option-title">Gemma 2 (9B) Instruct (Google, 美國) - 5.8 GB</div>
+                        <div className="option-title">Gemma 4 (12B) Instruct (Google, 美國) - 7.7 GB</div>
                         <div className="option-desc" style={{ marginTop: '4px' }}>
-                          【特點】Google 頂級旗艦開源模型，文學素養極高，文字修辭細膩優雅，適合長篇評語與哲理深度刻劃。需 8GB 以上記憶體。
+                          【特點】Google DeepMind 最新世代旗艦開源模型，具備 256K 超長上下文與強大推理文采，詞藻細緻典雅，適合深度長篇評語。需 10GB 以上記憶體。
                         </div>
                       </div>
                     </div>
@@ -811,7 +811,7 @@ function App() {
             </div>
           )}
 
-          {engineMode === 'local' ? (
+          {engineMode === 'local' && (
             <div>
               <div className="model-controls">
                 <div className="custom-select-wrapper" ref={modelDropdownRef} style={{flex: 1}}>
@@ -891,7 +891,9 @@ function App() {
                 初次載入需下載數GB模型檔至瀏覽器快取，請耐心等候。建議使用具備獨立顯卡或大記憶體之設備。
               </div>
             </div>
-          ) : (
+          )}
+
+          {engineMode === 'api' && (
             <div>
               <div className="form-group" style={{ marginBottom: '1.25rem' }}>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

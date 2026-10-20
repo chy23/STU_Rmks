@@ -19,11 +19,11 @@ const MODEL_DEFINITIONS = [
     hint: '記憶體需求低，速度極快，適合絕大多數日常學生評語生成與即時修改。'
   },
   {
-    id: 'gemma-2-9b-it-Q4_K_M.gguf',
-    name: 'Gemma 2 (9B) Instruct (Google - 離線原生)',
-    size: '5.8 GB',
-    tag: '旗艦深度文采',
-    hint: 'Google 頂級開源模型，文學素養深厚，文字細膩典雅，適合哲理與長篇評語。需 8GB 以上記憶體。'
+    id: 'gemma-4-12B-it-Q4_K_M.gguf',
+    name: 'Gemma 4 (12B) Instruct (Google - 旗艦深度)',
+    size: '7.7 GB',
+    tag: 'Google 旗艦大模型',
+    hint: 'Google DeepMind 最新世代旗艦開源模型，具備 256K 超長上下文與強大推理文采，適合細膩長篇評語與深度思考。需 10GB 以上記憶體。'
   }
 ];
 
