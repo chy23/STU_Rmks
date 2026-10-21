@@ -3,6 +3,22 @@ const fs = require('fs');
 const path = require('path');
 
 const translationMap = {
+  "Feat: 統一 WebLLM 與本機模型規格，新增 Gemma 4 (12B) Q4_K_M": {
+    title: "新增 Gemma 4 (12B) Q4_K_M 旗艦模型與統一規格呈現",
+    details: "1. 於本機模型清單全面新增 Google Gemma 4 (12B) Q4_K_M 旗艦開源模型。\n2. 遵循統一 5 大維度（廠商、國家、大小、特點、建議）呈現詳細規格資訊卡。\n3. 提供桌面原生硬體加速與純網頁環境之智慧導引機制。"
+  },
+  "feat: upgrade offline flagship model from Gemma 2 (9B) to Gemma 4 (12B) and restrict fallback chain to API mode": {
+    title: "升級離線旗艦模型至 Gemma 4 (12B) 並嚴格隔離備援鏈",
+    details: "1. 將離線原生旗艦模型由 Gemma 2 (9B) 升級為 Google 最新世代旗艦開源大模型 Gemma 4 (12B) Q4_K_M (7.7 GB)。\n2. 支援 Metal 與 Vulkan 原生硬體加速與 256K 超長上下文，推論文采與哲學思辨表現卓越。\n3. 備援調用鏈嚴格限制於雲端 API 模式，桌面原生與本機離線模式不混用 API 備援。"
+  },
+  "fix(electron): resolve blank screen by setting relative base path and add native menus": {
+    title: "修復桌面應用程式白屏並新增原生選單",
+    details: "1. 調整 Vite 打包 base 為相對路徑，修復 Electron 啟動時找不到資源導致白屏的問題。\n2. 增加原生選單與快速鍵支援。"
+  },
+  "chore: configure multi-platform packaging for macOS arm64 and Windows x64 with embedded local models": {
+    title: "配置跨平台打包（macOS arm64 與 Windows x64 內建本地模型）",
+    details: "1. 完成 electron-builder 打包配置，支援產出 Mac DMG 與 Windows 安裝檔。\n2. 整合模型下載腳本與資源打包流程。"
+  },
   "Feat: Add Electron desktop app infrastructure with offline native models (Llama-3.2-3B and Gemma-2-9B)": {
     title: "建置桌面原生 App 架構（支援 Mac M系列與 Windows，內建 Llama-3.2-3B 與 Gemma-2-9B）",
     details: "1. 導入 Electron 桌面端原生架構與 node-llama-cpp 推論引擎，支援一鍵打包為 macOS (Apple Silicon arm64 .dmg) 與 Windows (x64 .exe)。\n2. 內建兩大本地離線 GGUF 模型：Llama-3.2-3B-Instruct (極速日常首選) 與 Gemma-2-9B (旗艦深度文采)，支援 Apple Silicon Metal 與 Windows Vulkan/DirectML 硬體加速。\n3. 提供全自動模型下載腳本 (npm run download:models) 與自動封裝打包 (extraResources)。\n4. 介面無縫適配：桌面模式下自動優先啟動原生硬體加速離線推論，保留極致隱私與零連網開箱即用體驗。"

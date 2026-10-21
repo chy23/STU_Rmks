@@ -59,6 +59,15 @@ const AVAILABLE_MODELS = [
     size: "9B (約 90 億參數)",
     features: "Google 高階大腦容量模型，對繁體中文嚴謹文法與情緒轉折理解最透徹，邏輯綿密。",
     advice: "硬體需求最高（需 8GB 以上獨顯或電競級獨立顯卡 / Apple M 系列高配機）；運算負載重但品質極佳。"
+  },
+  {
+    id: "gemma-4-12B-it-Q4_K_M",
+    name: "Gemma 4 (12B)",
+    vendor: "Google",
+    country: "美國",
+    size: "12B (約 120 億參數 / 7.7 GB)",
+    features: "Google DeepMind 最新第四代旗艦開源大模型，具備原生多模態與深度推理架構、256K 超長上下文，詞藻細緻典雅，文學修辭與深度因果邏輯卓越。",
+    advice: "硬體需求最高（需 10GB~16GB 以上記憶體或獨立顯卡）；適合長篇深度寫作與專業級任務。在桌面原生架構 (Metal / Vulkan) 下秒速執行，網頁版因瀏覽器記憶體上限建議使用桌面端或 1B~9B 模型。"
   }
 ];
 
@@ -347,6 +356,16 @@ function App() {
 
   const handleInitModel = async () => {
     if (engine) return;
+    if (selectedModel === 'gemma-4-12B-it-Q4_K_M') {
+      if (isDesktop) {
+        setEngineMode('desktop');
+        setSelectedDesktopModel('gemma-4-12B-it-Q4_K_M.gguf');
+        addToast("已為您自動切換至桌面原生硬體加速引擎！");
+        return;
+      }
+      alert("⚠️ Gemma 4 (12B) 為高階 7.7GB 旗艦 GGUF 模型，受限於瀏覽器單一分頁記憶體上限，建議使用桌面版原生應用程式（具備 Metal / Vulkan 硬體加速與 10GB+ 記憶體）執行；若在純網頁環境，建議選用 1B~9B 之 WebLLM 模型。");
+      return;
+    }
     setModelLoading(true);
     try {
       const newEngine = await CreateMLCEngine(selectedModel, {
